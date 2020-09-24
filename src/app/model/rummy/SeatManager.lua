@@ -716,6 +716,159 @@ function SeatManager:onMoveCard(beginIdx, endIdx, frontBack)
     end
 end
 
+function SeatManager:selfDrawCardAnim(pack, moveToTargetCb)
+    local rPosXList = RummyUtil.getRelativePosXList(roomInfo:getCurGroups())
+    local mCardCenter = RVP.MCardCenter
+    local leftX = mCardCenter.x - (rPosXList[#rPosXList] - rPosXList[1])/2
+    local targetPos = cc.p(leftX + rPosXList[#rPosXList], mCardCenter.y)
+
+    if tonumber(pack.region) == 0 then -- 新牌堆
+        local newHeapPos = RVP.NewHeapPos
+        local card = g.myUi.PokerCard.new():setCard(pack.card)
+            :pos(newHeapPos.x, newHeapPos.y):addTo(self.sceneAnimNode_)
+        card:showBack()
+        card:stopAllActions()
+        card:runAction(cc.Sequence:create({
+            cc.Spawn:create({
+                cc.MoveTo:create(0.6, targetPos),
+                cc.ScaleTo:create(0.6, 1)
+            }),
+            cc.CallFunc:create(function()
+                card:flip(0)
+            end),
+            cc.DelayTime:create(0.1),
+            cc.CallFunc:create(function()
+                g.myFunc:safeRemoveNode(card)
+                if moveToTargetCb then moveToTargetCb() end
+            end)
+        }))
+    elseif tonumber(pack.region) == 1 then -- 旧牌堆
+        local oldHeapPos = RVP.OldHeapPos
+        local card = g.myUi.PokerCard.new():setCard(pack.card):pos(oldHeapPos.x, oldHeapPos.y):addTo(self.sceneAnimNode_)
+        card:showFront()
+        self:updateSlotCard(TAG_DISCARD_CARD, pack.dropCard)
+        card:setMagicVisible(RummyUtil.isMagicCard(pack.card))
+        card:stopAllActions()
+        card:runAction(cc.Sequence:create({
+            cc.Spawn:create({
+                cc.MoveTo:create(0.6, targetPos),
+                cc.ScaleTo:create(0.6, 1)
+            }),
+            cc.CallFunc:create(function()
+                g.myFunc:safeRemoveNode(card)
+                if moveToTargetCb then moveToTargetCb() end
+            end)
+        }))
+    end
+end
+
+function SeatManager:onSelfDiscardCard(dropCard, cardIdx)
+    self:stopCountDown(g.user:getUid())
+    self:selfDiscardCardAnim(dropCard, cardIdx, function()
+        self:updateMCards(roomInfo:getCurGroups())
+    end)
+    self:clearMCardChooseList()
+    self:hideAllAreaLights()
+end
+
+function SeatManager:selfDiscardCardAnim(dropCard, cardIdx, finishCallback)
+    if not g.myFunc:checkNodeExist(self.infoCardsNode) then return end    
+    local oldHeapPos = RVP.OldHeapPos
+    local card = self.mCardsNode:getChildByTag(cardIdx)
+    if not g.myFunc:checkNodeExist(card) then return end
+    if roomInfo:isDragDiscard() then -- 已经拖牌到弃牌区域
+        card:pos(oldHeapPos.x, oldHeapPos.y)
+    end
+    card:stopAllActions()
+    card:runAction(cc.Sequence:create({
+        cc.Spawn:create({
+            cc.MoveTo:create(0.4, oldHeapPos),
+            cc.ScaleTo:create(0.4, RummyConst.toSFactor),
+            cc.FadeOut:create(0.4),
+        }),
+        cc.CallFunc:create(function()
+            self:updateSlotCard(TAG_DISCARD_CARD, dropCard)
+            g.myFunc:safeRemoveNode(card)
+            if finishCallback then finishCallback() end
+        end),
+    }))
+
+    if cardIdx ~= RummyConst.DRAW_CARD_ID then -- 弃牌不是摸牌, 需要将摸牌和弃牌的cardTag对调
+        local child = self.mCardsNode:getChildByTag(RummyConst.DRAW_CARD_ID)
+        if g.myFunc:checkNodeExist(child) then child:setTag(cardIdx) end
+    end
+end
+
+function SeatManager:otherDrawCardAnim(pack)
+    if not g.myFunc:checkNodeExist(self.infoCardsNode) then return end
+    local seatId = self:querySeatIdByUid(pack.uid)
+    local fixSeatId = RummyUtil.getFixSeatId(seatId)
+    if fixSeatId < 0 then return end
+    if tonumber(pack.region) == 0 then -- 新牌堆
+        local newHeapPos = RVP.NewHeapPos
+        local card = g.myUi.PokerCard.new():pos(newHeapPos.x, newHeapPos.y):addTo(self.sceneAnimNode_):scale(RummyConst.toSFactor)
+        card:showBack()
+        card:stopAllActions()
+        card:runAction(cc.Sequence:create({
+            cc.Spawn:create({
+                cc.MoveTo:create(0.6, P1[fixSeatId]),
+                cc.ScaleTo:create(0.6, RummyConst.toSFactor * 0.8),
+                cc.FadeOut:create(0.6),
+            }),
+            cc.CallFunc:create(function()
+                g.myFunc:safeRemoveNode(card)
+            end)
+        }))
+    elseif tonumber(pack.region) == 1 then -- 旧牌堆
+        local dropCard = self.infoCardsNode:getChildByTag(TAG_DISCARD_CARD)
+        local oldHeapPos = RVP.OldHeapPos
+        local oldCardUint = dropCard:getCard()
+        local card = g.myUi.PokerCard.new():setCard(oldCardUint):scale(RummyConst.toSFactor)
+            :pos(oldHeapPos.x, oldHeapPos.y):addTo(self.sceneAnimNode_)
+        card:showFront()
+        card:setMagicVisible(RummyUtil.isMagicCard(oldCardUint))
+        self:updateSlotCard(TAG_DISCARD_CARD, pack.dropCard)
+        card:stopAllActions()
+        card:runAction(cc.Sequence:create({
+            cc.Spawn:create({
+                cc.MoveTo:create(0.6, P1[fixSeatId]),
+                cc.ScaleTo:create(0.6, RummyConst.toSFactor * 0.8),
+                cc.FadeOut:create(0.6),
+            }),
+            cc.CallFunc:create(function()
+                g.myFunc:safeRemoveNode(card)
+            end)
+        }))
+    end
+end
+
+function SeatManager:otherDiscardCardAnim(pack)
+    if not g.myFunc:checkNodeExist(self.infoCardsNode) then return end
+    local seatId = self:querySeatIdByUid(pack.uid)
+    local fixSeatId = RummyUtil.getFixSeatId(seatId)
+    if fixSeatId < 0 then return end
+    
+    local oldHeapPos = RVP.OldHeapPos
+    local card = g.myUi.PokerCard.new():setCard(pack.dropCard):scale(RummyConst.toSFactor * 0.6)
+        :pos(P1[fixSeatId].x, P1[fixSeatId].y):addTo(self.infoCardsNode)
+    card:showFront()
+    card:stopAllActions()
+    card:runAction(cc.Sequence:create({
+        cc.Spawn:create({
+            cc.ScaleTo:create(0.4, RummyConst.toSFactor * 1),
+            cc.FadeIn:create(0.4),
+        }),
+        cc.Spawn:create({
+            cc.MoveTo:create(0.4, oldHeapPos),
+            cc.FadeOut:create(0.4),
+        }),
+        cc.CallFunc:create(function()
+            self:updateSlotCard(TAG_DISCARD_CARD, pack.dropCard)
+            g.myFunc:safeRemoveNode(card)
+        end)
+    }))
+end
+
 function SeatManager:updateMCards(groups, noUpload)
     dump(groups, "cur Group", 5)
     roomInfo:setCurGroups(groups)

@@ -256,7 +256,7 @@ end
 function SeatView:shakeCard()
     if self.needShake then
        self.needShake = false
-       self.soundHandle = g.audio:playSound(nk.Audio.SANGONG_COUNTDOWN)
+    --    self.soundHandle = g.audio:playSound(g.audio.SANGONG_COUNTDOWN)
    end
 end
 

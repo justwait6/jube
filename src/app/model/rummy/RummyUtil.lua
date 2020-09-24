@@ -204,7 +204,7 @@ function RummyUtil.refreshGroupsByGroup(chooseCards)
     table.sort(chooseCards, function(a, b) return mCards[a] < mCards[b] end)
     table.insert(operGroups, chooseCards)
     if #operGroups > RummyConst.MAX_GROUP_NUM then
-        nk.TopTipManager:showTopTip("达到最大Group限制")
+        g.myUi.topTip:showText("达到最大Group限制")
         roomInfo:setCurGroups(bkupGroups) -- 更新group项
         return false
     end

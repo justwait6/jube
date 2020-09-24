@@ -36,7 +36,7 @@ function ScaleButton:ctor(params)
                 self.clickTime = g.timeUtil:getSocketTime()
             	-- 播放音效
     			if self.isPlaySound ~= false then
-    				-- g.audio:playSound(nk.Audio.Effects.CLICK_BUTTON)
+    				-- g.audio:playSound(g.audio.Effects.CLICK_BUTTON)
     			end
             	if params and not params.noAnim then
                 	self:targetScaleTo(sender, 0.95 * self.scale)

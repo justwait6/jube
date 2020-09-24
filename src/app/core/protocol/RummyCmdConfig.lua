@@ -23,6 +23,29 @@ RummyCmdConfig = {
             {name = "tid", type = T.INT},
         }
     },
+    [C.CLI_EXIT_ROOM] = {
+        ver = 1,
+        fmt = {
+            {name = "uid", type = T.INT},
+            {name = "tid", type = T.INT},
+        }
+    },
+    [C.CLI_RUMMY_DRAW_CARD] = {
+        ver = 1,
+        fmt = {
+            {name = "uid", type = T.INT},
+            {name = "region", type = T.BYTE},
+        }
+    },
+    [C.CLI_RUMMY_DISCARD_CARD] = {
+        ver = 1,
+        fmt = {
+            {name="uid", type=T.INT},
+            {name="card", type=T.BYTE},
+            {name="index", type=T.INT},
+        }
+    },
+    
 
     --[[
         服务器包
@@ -148,6 +171,40 @@ RummyCmdConfig = {
                             {name="card",type=T.BYTE},
                     },
             },
+        }
+    },
+    [C.SVR_RUMMY_DRAW_CARD] = {
+        ver = 1,
+        fmt = {
+            {name="ret", type=T.BYTE},
+            {name="region", type=T.BYTE,depends = function(ctx) return ctx.ret == 0 end},
+            {name="dropCard", type=T.BYTE,depends = function(ctx) return ctx.ret == 0 end},
+            {name="card", type=T.BYTE,depends = function(ctx) return ctx.ret == 0 end},
+            {name="heapCardNum", type=T.INT,depends = function(ctx) return ctx.ret == 0 end}
+        }
+    },
+    [C.SVR_CAST_RUMMY_DRAW_CARD] = {
+        ver = 1,
+        fmt = {
+            {name="uid", type=T.INT},
+            {name="region", type=T.BYTE},
+            {name="dropCard", type=T.BYTE},
+            {name="heapCardNum", type=T.INT}
+        }
+    },
+    [C.SVR_RUMMY_DISCARD_CARD] = {
+        ver = 1,
+        fmt = {
+            {name="ret", type=T.BYTE},
+            {name="dropCard", type=T.BYTE, depends = function(ctx) return ctx.ret == 0 end},
+            {name="index", type=T.INT, depends = function(ctx) return ctx.ret == 0 end},
+        }
+    },
+    [C.SVR_CAST_RUMMY_DISCARD] = {
+        ver = 1,
+        fmt = {
+            {name="uid", type=T.INT},
+            {name="dropCard", type=T.BYTE},
         }
     },
     

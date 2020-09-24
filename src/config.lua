@@ -23,3 +23,12 @@ CONFIG_SCREEN_HEIGHT = 720
 
 -- auto scale mode
 CONFIG_SCREEN_AUTOSCALE = "FIXED_HEIGHT"
+--是否为长屏手机 中文注释写在上一行 只针对这个文件
+CONFIG_ISLARGE_WIDTH = false 
+local glView = cc.Director:getInstance():getOpenGLView()
+local size = glView:getFrameSize()
+local w = size.width
+local h = size.height
+if w/h > CONFIG_SCREEN_WIDTH/CONFIG_SCREEN_HEIGHT then
+	CONFIG_ISLARGE_WIDTH = true
+end

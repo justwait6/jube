@@ -68,6 +68,7 @@ function RoomManager:initOperBtn()
 	local newHeapPos = RVP.NewHeapPos
 	self.drawCardBtn1 = g.myUi.ScaleButton.new({normal = g.Res.blank})
 	:onClick(handler(self, function(sender)
+		printVgg("drawCardBtn1 onclick...")
 		self.rummyCtrl_:sendCliDrawCard(0)
 	end))
 	:addTo(self.sceneRoomNode_)
@@ -408,6 +409,16 @@ end
 
 function RoomManager:hideWaitNextGameTips_()
 	if g.myFunc:checkNodeExist(self.waitNextGameBg) then self.waitNextGameBg:hide() end
+end
+
+function RoomManager:playDrawCardTips(name, uid, region)
+	local str = ""
+    if tonumber(region) == 0 then
+        str = string.format(g.lang:getText("RUMMY", "DRAW_CART_TIP_1_FMT"), (name or uid))
+    elseif tonumber(region) == 1 then
+        str = string.format(g.lang:getText("RUMMY", "DRAW_CART_TIP_2_FMT"), (name or uid))
+    end
+    self:playMiddleTips(str)
 end
 
 function RoomManager:hideAllMiddleTips_()
