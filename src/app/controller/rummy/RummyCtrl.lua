@@ -118,6 +118,10 @@ function RummyCtrl:processPacket_(pack)
 		self:selfDiscard(pack)
 	elseif cmd == CmdDef.SVR_CAST_RUMMY_DISCARD then
 		self:castUserDiscard(pack)
+	elseif cmd == CmdDef.SVR_RUMMY_FINISH then
+		self:selfFinish(pack)
+	elseif cmd == CmdDef.SVR_CAST_RUMMY_FINISH then
+		self:castUserFinish(pack)
 	elseif cmd == CmdDef.SVR_RUMMY_UPLOAD_GROUPS then
 		printVgg("upload groups, ret: ", pack.ret)
 	end
@@ -139,7 +143,7 @@ function RummyCtrl:enterRoom(pack)
 		-- 	if self:isSelfInGame(pack.users) then -- 自己正在玩
 		-- 		pack.cards = RummyUtil.calcMCardsByReconnect(pack.groups, pack.drawCardPos)
 		-- 		roomInfo:setMCards(pack.cards)
-		-- 		self.roomManager:selfInGameReconnectInfo(pack)
+		-- 		roomMgr:selfInGameReconnectInfo(pack)
 		-- 		seatMgr:selfInGameReconnectInfo(pack)
 		-- 		local isOk = RummyUtil.refreshGroupsByReconnect(pack.groups, pack.drawCardPos)
 		-- 		print("enterRoom: refreshGroupsByReconnect", isOk)
@@ -155,7 +159,7 @@ function RummyCtrl:enterRoom(pack)
 		-- 	elseif tonumber(pack.mPlayer.isDrop) == 1 then -- 自己已经弃牌
 		-- 		self:simulateSelfDrop({ret = 0})
 		-- 	else -- 等待, 观战中
-		-- 		self.roomManager:showWaitNextGameTips()
+		-- 		roomMgr:showWaitNextGameTips()
 		-- 	end
 		-- end
 	else 
@@ -305,13 +309,52 @@ function RummyCtrl:castUserDiscard(pack)
 	-- g.audio:playSound(g.Audio.SANGONG_FOLD)
 end
 
+function RummyCtrl:selfFinish(pack)
+    if not pack then return end
+    if pack.ret == 0 then -- 成功
+        local mCards = roomInfo:getMCards()
+        local cardIdx = roomInfo:getFinishCardIndex()
+        local finishCard = mCards[cardIdx]
+        if cardIdx >= 1 and cardIdx <= RummyConst.DRAW_CARD_ID then
+            local mCards = roomInfo:getMCards()
+            table.remove(mCards, cardIdx)
+            if cardIdx ~= RummyConst.DRAW_CARD_ID then
+                local lastCard = table.remove(mCards)
+                table.insert(mCards, cardIdx, lastCard)
+            end
+            roomInfo:setMCards(mCards)
+            RummyUtil.refreshGroupsByDiscard(cardIdx)
+        end
+
+        roomMgr:hideOperBtn()
+        print("-- todo, 自己finish动画")
+
+        seatMgr:selfFinishCardAnim(finishCard, cardIdx, function()
+            seatMgr:updateMCards(roomInfo:getCurGroups())
+
+            -- 提示玩家组牌
+            roomMgr:showDeclareTips("Please group your cards and declare.", pack.time or 0)
+            seatMgr:startCountDown(pack.time or 0, g.user:getUid())
+        end)
+    end
+end
+
+function RummyCtrl:castUserFinish(pack)
+    if not pack then return end
+    if tonumber(pack.uid) == tonumber(g.user:getUid()) then return end -- 如果是自己, 返回
+    seatMgr:startCountDown(pack.time or 0, pack.uid)
+    seatMgr:otherFinishCardAnim(pack)
+    print("-- todo, 广播用户finish牌动画")
+	-- g.audio:playSound(g.audio.SANGONG_FOLD)
+end
+
 function RummyCtrl:backClick()
 	if RummyConst.isMeInGames then
 		g.myUi.Dialog.new({
 			type = g.myUi.Dialog.Type.NORMAL,
 			text = g.lang:getText("RUMMY", "EXITTIPS"),
 			onConfirm = RummyCtrl.logoutRoom,	
-		})
+		}):show()
  	else
 		RummyCtrl.logoutRoom()
  	end
@@ -365,15 +408,43 @@ function RummyCtrl:sendCliDiscardCard(cardIdx)
 			:build())
 	end
 end
-function RummyCtrl:sendCliFinishCard(cardIdx)
-	-- local mCards = roomInfo:getMCards()
-	-- roomInfo:setFinishCardIndex(cardIdx)
-	-- if g.mySocket:isConnected() then
-	-- 	g.mySocket:send(g.mySocket:createPacketBuilder(CmdDef.CLI_RUMMY_FINISH)
-	-- 	:setParameter("uid", tonumber(g.user:getUid()))
-	-- 	:setParameter("card", mCards[cardIdx])
-	-- 	:build())
-	-- end
+function RummyCtrl:sendCliFinish(cardIdx)
+	local mCards = roomInfo:getMCards()
+	roomInfo:setFinishCardIndex(cardIdx)
+	if g.mySocket:isConnected() then
+		g.mySocket:send(g.mySocket:createPacketBuilder(CmdDef.CLI_RUMMY_FINISH)
+		:setParameter("uid", tonumber(g.user:getUid()))
+		:setParameter("card", mCards[cardIdx])
+		:build())
+	end
+end
+
+function RummyCtrl:sendCliDeclare()
+	local groups = roomInfo:getCurGroups()
+	local mCards = roomInfo:getMCards()
+    if g.mySocket:isConnected() then
+        local pack = g.mySocket:createPacketBuilder(CmdDef.CLI_RUMMY_DECLARE)
+        pack:setParameter("uid", tonumber(g.user:getUid()))
+        local simuGroups = {}
+        for i, group in pairs(groups) do
+            simuGroups[i] = {}
+            simuGroups[i].cards = {}
+            for j = 1, #group do
+                table.insert(simuGroups[i].cards, {card = mCards[group[j]]})
+            end
+        end
+		pack:setParameter("groups", simuGroups)
+		print("-- test begin, onDeclareClick cards begin")
+		for i, group in pairs(simuGroups) do
+			local str = ""
+			for j = 1, #group.cards do
+				str = str .. string.format("%x", group.cards[j].card) .. ", "
+			end
+			print(str)
+		end
+		print("-- test end, onDeclareClick cards end")
+        g.mySocket:send(pack:build())
+  	end
 end
 
 function RummyCtrl:vggSortCards()

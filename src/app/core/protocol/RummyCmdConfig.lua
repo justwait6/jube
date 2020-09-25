@@ -45,6 +45,13 @@ RummyCmdConfig = {
             {name="index", type=T.INT},
         }
     },
+    [C.CLI_RUMMY_FINISH] = {
+        ver = 1,
+        fmt = {
+            {name="uid", type=T.INT},
+            {name="card", type=T.BYTE},
+        }
+    },
     [C.CLI_RUMMY_UPLOAD_GROUPS] = {
         ver = 1,
         fmt = {
@@ -221,6 +228,21 @@ RummyCmdConfig = {
         fmt = {
             {name="uid", type=T.INT},
             {name="dropCard", type=T.BYTE},
+        }
+    },
+    [C.SVR_RUMMY_FINISH] = {
+        ver = 1,
+        fmt = {
+            {name="ret", type=T.BYTE},-- 0 成功
+            {name="time", type=T.INT, depends = function(ctx) return ctx.ret == 0 end},-- finish确认后, finish玩家组牌时间
+        }        
+    },
+    [C.SVR_CAST_RUMMY_FINISH] = {
+        ver = 1,
+        fmt = {
+            {name="uid", type=T.INT},
+            {name="time", type=T.INT},
+            {name="card", type=T.BYTE},
         }
     },
     [C.SVR_RUMMY_UPLOAD_GROUPS] = {

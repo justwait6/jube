@@ -1,6 +1,5 @@
 local RoomManager = class("RoomManager")
 
-local CmdDef = require("app.core.protocol.CommandDef")
 local roomInfo = require("app.model.rummy.RoomInfo").getInstance()
 local seatMgr = require("app.model.rummy.SeatManager").getInstance()
 local RummyUtil = require("app.model.rummy.RummyUtil")
@@ -296,8 +295,16 @@ end
 function RoomManager:onDropClick()
 end
 function RoomManager:onFinishBtnClick()
-end
-function RoomManager:onDeclareClick()
+	g.myUi.Dialog.new({
+		type = g.myUi.Dialog.Type.NORMAL,
+		text = g.lang:getText("RUMMY", "CONFIRM_FINISH_TIPS"),
+		onConfirm = handler(self, function()
+			local chooseCards = roomInfo:getMCardChooseList()
+			if #chooseCards ~= 1 then return end
+			local cardIdx = chooseCards[1]
+			self.rummyCtrl_:sendCliFinish(cardIdx)
+		end),	
+	}):show()
 end
 
 function RoomManager:updateMBalance(money)
@@ -421,9 +428,43 @@ function RoomManager:playDrawCardTips(name, uid, region)
     self:playMiddleTips(str)
 end
 
+
+function RoomManager:showDeclareTips(str, sec)
+	self:hideAllMiddleTips_() -- 时序优先级
+	local width = 320
+	local txtWidth = display.newTTFLabel({text = str, size = 24, color = cc.c3b(0xb4, 0xb3, 0xb3)}):getContentSize().width + 200
+	if txtWidth > width then
+		width = txtWidth
+	end
+	g.myFunc:safeRemoveNode(self.declareBg)
+	self.declareBg = display.newScale9Sprite(mResDir .. "tip_mid_bg.png", display.cx, display.cy + 20, cc.size(width, 54)):addTo(self.sceneRoomNode_)
+	self.declareBg:setCapInsets(cc.rect(94/2, 54/2, 1, 1))
+	display.newTTFLabel({text = str, size = 24, color = cc.c3b(0xff, 0xff, 0xff)})
+		:pos(self.declareBg:getContentSize().width/2 - 80, self.declareBg:getContentSize().height/2):addTo(self.declareBg)
+	self.declareBg:show()
+
+	g.myUi.ScaleButton.new({normal = commonRoomResDir .. "oper_green_btn_2.png"})
+		:setButtonLabel(display.newTTFLabel({size = 30, text = "Declare"}), cc.p(0, 4))
+		:onClick(self.rummyCtrl_.sendCliDeclare)
+		:addTo(self.declareBg)
+		:pos(self.declareBg:getContentSize().width - 70, self.declareBg:getContentSize().height/2 - 1)
+		:setSwallowTouches(false)
+		
+	if type(sec) == "number" then
+		local id = g.mySched:doDelay(function()
+			g.mySched:cancel(id)
+			self:hideDeclareTips_()
+		end, sec)
+	end
+end
+
+function RoomManager:hideDeclareTips_()
+	if g.myFunc:checkNodeExist(self.declareBg) then self.declareBg:hide() end
+end
+
 function RoomManager:hideAllMiddleTips_()
 	self:hideTipsMiddle_()
-	-- self:hideDeclareTips_()
+	self:hideDeclareTips_()
 	-- self:hideViewResultTips_()
 end
 

@@ -693,13 +693,16 @@ function SeatManager:onDragToFinishArea(cardSprite)
 end
 
 function SeatManager:showFinishConfirmPopup(cardIdx)
-    CommonPopup.new(g.lang:getText("RUMMY", "CONFIRM_FINISH_TIPS"),CommonPopup.TWOBTN,
-    handler(self, function()
-        roomInfo:setDragFinish(true)
-        self.rummyCtrl_:sendCliFinishCard(cardIdx)
-        self:updateMCards(roomInfo:getCurGroups()) -- 更改后牌堆
-    end),
-    handler(self,self.cardsToOrigin),handler(self,self.cardsToOrigin),true):show()
+    g.myUi.Dialog.new({
+		type = g.myUi.Dialog.Type.NORMAL,
+		text = g.lang:getText("RUMMY", "CONFIRM_FINISH_TIPS"),
+        onConfirm = handler(self, function()
+            roomInfo:setDragFinish(true)
+            self.rummyCtrl_:sendCliFinish(cardIdx)
+            self:updateMCards(roomInfo:getCurGroups()) -- 更改后牌堆
+        end),
+        onCancel = handler(self,self.cardsToOrigin)
+	}):show()
 end
 
 function SeatManager:isInMoveCardArea(x, y)
@@ -799,6 +802,34 @@ function SeatManager:selfDiscardCardAnim(dropCard, cardIdx, finishCallback)
     end
 end
 
+function SeatManager:selfFinishCardAnim(finishCard, cardIdx, finishCallback)
+    if not g.myFunc:checkNodeExist(self.infoCardsNode) then return end
+
+    local destPos = RVP.FinishSlotPos
+    local card = self.mCardsNode:getChildByTag(cardIdx)
+    if not g.myFunc:checkNodeExist(card) then return end
+    if roomInfo:isDragFinish() then -- 已经拖牌到Finish区域
+        card:pos(destPos.x, destPos.y)
+    end
+    card:stopAllActions()
+    card:runAction(cc.Sequence:create({
+        cc.Spawn:create({
+            cc.MoveTo:create(0.4, destPos),
+            cc.ScaleTo:create(0.4, RummyConst.toSFactor),
+            cc.FadeOut:create(0.4),
+        }),
+        cc.CallFunc:create(function()
+            self:updateSlotCard(TAG_FINISH_CARD, finishCard)
+            g.myFunc:safeRemoveNode(card)
+            if finishCallback then finishCallback() end
+        end),
+    }))
+    if cardIdx ~= RummyConst.DRAW_CARD_ID then -- finish牌不是摸牌, 需要将摸牌和弃牌的cardTag对调
+        local child = self.mCardsNode:getChildByTag(RummyConst.DRAW_CARD_ID)
+        if g.myFunc:checkNodeExist(child) then child:setTag(cardIdx) end
+    end
+end
+
 function SeatManager:otherDrawCardAnim(pack)
     if not g.myFunc:checkNodeExist(self.infoCardsNode) then return end
     local seatId = self:querySeatIdByUid(pack.uid)
@@ -867,6 +898,34 @@ function SeatManager:otherDiscardCardAnim(pack)
             g.myFunc:safeRemoveNode(card)
         end)
     }))
+end
+
+function SeatManager:otherFinishCardAnim(pack)
+    if not g.myFunc:checkNodeExist(self.infoCardsNode) then return end
+    local seatId = self:querySeatIdByUid(pack.uid)
+    local fixSeatId = RummyUtil.getFixSeatId(seatId)
+    if fixSeatId < 0 then return end
+    local destPos = RVP.FinishSlotPos
+    local card = g.myUi.PokerCard.new():setCard(pack.card):scale(RummyConst.toSFactor * 0.6)
+        :pos(P1[fixSeatId].x, P1[fixSeatId].y):addTo(self.infoCardsNode)
+    card:showFront()
+    card:showBack()
+    card:stopAllActions()
+    card:runAction(cc.Sequence:create({
+        cc.Spawn:create({
+            cc.ScaleTo:create(0.4, RummyConst.toSFactor * 1),
+            cc.FadeIn:create(0.4),
+        }),
+        cc.Spawn:create({
+            cc.MoveTo:create(0.4, destPos),
+            cc.FadeOut:create(0.4),
+        }),
+        cc.CallFunc:create(function()
+            self:updateSlotCard(TAG_FINISH_CARD, pack.card, true)
+            g.myFunc:safeRemoveNode(card)
+        end)
+    }))
+
 end
 
 function SeatManager:updateMCards(groups, noUpload)
