@@ -17,8 +17,6 @@ function SeatView:initialize()
     self.sitdown = display.newNode():addTo(self):hide()
 	display.newSprite(mResDir .. "seat_down_arrow.png"):addTo(self.sitdown)
     display.newSprite(mResDir .. "seat_bg.png"):addTo(self.sitdown)
-
-    self.headMask = display.newSprite(mResDir .. "head_mask.png"):addTo(self):hide()
     
     self.headCircleLight1 = display.newSprite(mResDir .. "head_circle_light1.png"):addTo(self):hide()
     self.headCircleLight2 = display.newSprite(mResDir .. "head_circle_light2.png"):addTo(self):hide():opacity(127)
@@ -30,6 +28,7 @@ function SeatView:initialize()
         clickOptions = {default = true},
         clickCallback = handler(self, self.ctrl.doAvatarClick)
     }):addTo(self)
+    self.headMask = display.newSprite(mResDir .. "head_mask.png"):addTo(self):hide()
 
     -- 头像显示的钱
     self.miniInfoNode = display.newNode():pos(0, -50):addTo(self):hide()
@@ -59,11 +58,12 @@ function SeatView:setHeadDark()
         self.headMask:show()
     end
 end
+
 function SeatView:setHeadBright()
     if self.headMask then
         self.headMask:hide()
         end
-        -- self:hideFoldTxt()
+        self:hideFoldTxt()
         -- self:hideAwayTxt()
 end
 
@@ -77,7 +77,7 @@ function SeatView:updateSeatConfig()
         self.countDownNumBg:pos(-80, -16)
     else
         self.headScale = 1
-        self.headMaskScale = 1.08
+        self.headMaskScale = 1.02
         self.headCircleLightScale = 1
         self.miniInfoNode:show()
         self.circleProgress:setScale(0.9)
@@ -197,6 +197,20 @@ end
 
 function SeatView:hideMiniInfoBg()
 	if self.miniInfoNode then self.miniInfoNode:hide() end
+end
+
+function SeatView:showFoldTxt()
+	if not self.foldTxt then
+		self.foldTxt = display.newTTFLabel({text = g.lang:getText("RUMMY", "FOLDED"), size = 20, color = cc.c3b(0xb4, 0xb3, 0xb3)})
+			:setRotation(-25)
+			:addTo(self)
+	end
+    self.foldTxt:show()
+    -- self:hideAwayTxt() -- 优先显示drop, 有drop隐藏away
+end
+
+function SeatView:hideFoldTxt()
+	if self.foldTxt then self.foldTxt:hide() end
 end
 
 function SeatView:startCountDown(time,finishCallback)

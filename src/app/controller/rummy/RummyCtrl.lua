@@ -7,6 +7,8 @@ local RummyConst = require("app.model.rummy.RummyConst")
 local roomInfo = require("app.model.rummy.RoomInfo").getInstance()
 local RummyUtil = require("app.model.rummy.RummyUtil")
 
+local PACKET_PROC_FRAME_INTERVAL = 2
+
 function RummyCtrl:ctor()
 	self.packetCache_ = {}
 	self.frameNo_ = 1
@@ -122,6 +124,10 @@ function RummyCtrl:processPacket_(pack)
 		self:selfFinish(pack)
 	elseif cmd == CmdDef.SVR_CAST_RUMMY_FINISH then
 		self:castUserFinish(pack)
+	elseif cmd == CmdDef.SVR_RUMMY_DROP then
+		self:selfDrop(pack)
+	elseif cmd == CmdDef.SVR_CAST_RUMMY_DROP then
+		self:castUserDrop(pack)
 	elseif cmd == CmdDef.SVR_RUMMY_UPLOAD_GROUPS then
 		printVgg("upload groups, ret: ", pack.ret)
 	end
@@ -348,6 +354,30 @@ function RummyCtrl:castUserFinish(pack)
 	-- g.audio:playSound(g.audio.SANGONG_FOLD)
 end
 
+function RummyCtrl:selfDrop(pack)
+    if not pack then return end
+	if tonumber(pack.ret) == 0 then -- 弃牌成功
+		pack.uid = g.user:getUid()
+        roomInfo:clearMCards()
+        seatMgr:stopCountDown(g.user:getUid())
+		seatMgr:selfDrop(pack)
+        roomMgr:onSelfDrop()
+    end
+end
+
+function RummyCtrl:simulateSelfDrop(pack)
+    self:selfDrop(pack)
+end
+
+function RummyCtrl:castUserDrop(pack)
+    if not pack then return end
+    seatMgr:stopCountDown(pack.uid)
+    if tonumber(pack.uid) == tonumber(g.user:getUid()) then
+        self:simulateSelfDrop({ret = 0})
+    end
+    seatMgr:userDrop(pack)
+end
+
 function RummyCtrl:backClick()
 	if RummyConst.isMeInGames then
 		g.myUi.Dialog.new({
@@ -415,6 +445,13 @@ function RummyCtrl:sendCliFinish(cardIdx)
 		g.mySocket:send(g.mySocket:createPacketBuilder(CmdDef.CLI_RUMMY_FINISH)
 		:setParameter("uid", tonumber(g.user:getUid()))
 		:setParameter("card", mCards[cardIdx])
+		:build())
+	end
+end
+function RummyCtrl:sendCliDrop()
+	if g.mySocket:isConnected() then
+		g.mySocket:send(g.mySocket:createPacketBuilder(CmdDef.CLI_RUMMY_DROP)
+		:setParameter("uid", tonumber(g.user:getUid()))
 		:build())
 	end
 end

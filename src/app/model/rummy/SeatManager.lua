@@ -830,6 +830,12 @@ function SeatManager:selfFinishCardAnim(finishCard, cardIdx, finishCallback)
     end
 end
 
+function SeatManager:selfDrop(pack)
+    self:clearMCardsArea()
+    self:hideAllAreaLights()
+    self:userDrop(pack)
+end
+
 function SeatManager:otherDrawCardAnim(pack)
     if not g.myFunc:checkNodeExist(self.infoCardsNode) then return end
     local seatId = self:querySeatIdByUid(pack.uid)
@@ -925,7 +931,15 @@ function SeatManager:otherFinishCardAnim(pack)
             g.myFunc:safeRemoveNode(card)
         end)
     }))
+end
 
+function SeatManager:userDrop(pack)
+    local seatId = self:querySeatIdByUid(pack.uid)
+    if seatId >= 0 then
+        local seat = self:getSeatByServerSeatId(seatId)
+        seat:setHeadDark()
+        seat:showFoldTxt()
+    end
 end
 
 function SeatManager:updateMCards(groups, noUpload)
@@ -1204,6 +1218,15 @@ function SeatManager:getSeatByUid(uid)
 	end
 end
 
+function SeatManager:getSeatByServerSeatId(serverSeatId)
+	for i = 0, RummyConst.UserNum - 1 do
+		local seat = self.seats_[i]
+		if seat:getServerSeatId() == serverSeatId then
+			return seat
+		end
+	end
+end
+
 function SeatManager:querySeatIdByUid(uid)
     local player = self:queryUser(uid)
     if player then
@@ -1264,6 +1287,11 @@ end
 function SeatManager:queryUsernameByUid(uid)
     local userinfo = self:queryUserinfo(uid) or {}
     return userinfo.nickName
+end
+
+function SeatManager:clearMCardsArea()
+    g.myFunc:safeRemoveNode(self.mCardsNode)
+    g.myFunc:safeRemoveNode(self.mGroupInfoNode)
 end
 
 function SeatManager:clearAll()

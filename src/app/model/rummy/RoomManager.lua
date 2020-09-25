@@ -95,7 +95,7 @@ function RoomManager:initOperBtn()
 		if self.dropBtn:getChildByTag(1):isVisible() then -- 有check框
 			self:onPreDropClick()
 		else
-			self:onDropClick()
+			self.rummyCtrl_:sendCliDrop()
 		end
 	end))
 		:addTo(self.sceneRoomNode_)
@@ -172,7 +172,7 @@ function RoomManager:onSelfTurn() -- Svr返回自己操作
 	self:updateDropBtn()
 	-- 检查predrop
 	if self.dropWhenTurn then -- 自动弃整副牌
-		self:onDropClick()
+		self.rummyCtrl_:sendCliDrop()
 	end
 end
 
@@ -291,8 +291,6 @@ function RoomManager:onPreDropClick()
 		check:show()
 		self.dropWhenTurn = true
 	end
-end
-function RoomManager:onDropClick()
 end
 function RoomManager:onFinishBtnClick()
 	g.myUi.Dialog.new({
