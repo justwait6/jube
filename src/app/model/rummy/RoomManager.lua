@@ -426,7 +426,6 @@ function RoomManager:playDrawCardTips(name, uid, region)
     self:playMiddleTips(str)
 end
 
-
 function RoomManager:showDeclareTips(str, sec)
 	self:hideAllMiddleTips_() -- 时序优先级
 	local width = 320

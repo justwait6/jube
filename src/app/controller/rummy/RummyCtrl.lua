@@ -124,6 +124,10 @@ function RummyCtrl:processPacket_(pack)
 		self:selfFinish(pack)
 	elseif cmd == CmdDef.SVR_CAST_RUMMY_FINISH then
 		self:castUserFinish(pack)
+	elseif cmd == CmdDef.SVR_RUMMY_DECLARE then
+		self:selfDeclare(pack)
+	elseif cmd == CmdDef.SVR_CAST_RUMMY_DECLARE then
+		self:castUserDeclare(pack)
 	elseif cmd == CmdDef.SVR_RUMMY_DROP then
 		self:selfDrop(pack)
 	elseif cmd == CmdDef.SVR_CAST_RUMMY_DROP then
@@ -354,6 +358,58 @@ function RummyCtrl:castUserFinish(pack)
 	-- g.audio:playSound(g.audio.SANGONG_FOLD)
 end
 
+function RummyCtrl:selfDeclare(pack)
+	if not pack then return end
+	-- ret为0, 合法declare; ret为10, 尝试[first-valid-declare]失败; ret为11, 剩余玩家declare
+    if tonumber(pack.ret) == 0 or tonumber(pack.ret) == 10 or tonumber(pack.ret) == 11 then
+        seatMgr:stopCountDown(g.user:getUid())
+		seatMgr:clearTable()
+		roomMgr:clearTable()
+		seatMgr:selfDeclare(pack)
+        if tonumber(pack.ret) == 10 then -- 尝试[first-valid-declare]失败, 弃牌
+            self:simulateSelfDrop({ret = 0})
+        end
+    end
+end
+
+function RummyCtrl:simulateSelfDeclare(pack)
+    self:selfDeclare(pack)
+end
+
+function RummyCtrl:castUserDeclare(pack)
+    if not pack then return end
+    seatMgr:stopCountDown(pack.uid)
+    if pack.ret == 0 then -- declare成功
+        seatMgr:showFinishSlotCard()
+        if tonumber(pack.uid) ~= tonumber(g.user:getUid())
+            and #(roomInfo:getMCards() or {}) > 0 then -- 不是自己, 且在玩
+            self:simulateNotifyLeftMeDeclare({declareUid = pack.uid, time = pack.time})
+        end
+        -- 保存其他玩家declare时间
+        roomInfo:setDeclareTime(pack.time)
+        roomInfo:setDeclareTimeMinus(g.timeUtil:getSocketTime())
+        roomInfo:setIsNewRoundCount(false)
+    else -- declare失败
+        -- finish牌移动到弃牌区域
+        seatMgr:cardFinishAreaToDiscardArea()
+        self:simulateCastUserDrop({uid = pack.uid})
+    end
+    if tonumber(pack.uid) == tonumber(g.user:getUid()) then
+        self:simulateSelfDeclare({ret = pack.ret})
+    end
+end
+
+function RummyCtrl:simulateNotifyLeftMeDeclare(pack)
+    roomMgr:hideOperBtn()
+    seatMgr:startCountDown(pack.time or 0, g.user:getUid())
+    local str = "Please group your cards and declare."
+    if pack.declareUid then
+        local name = seatMgr:queryUsernameByUid(pack.declareUid)
+        str = string.format("%s has made a valid declaration, Please group your cards and declare.", (name or pack.declareUid))
+    end
+    roomMgr:showDeclareTips(str, pack.time)
+end
+
 function RummyCtrl:selfDrop(pack)
     if not pack then return end
 	if tonumber(pack.ret) == 0 then -- 弃牌成功
@@ -376,6 +432,10 @@ function RummyCtrl:castUserDrop(pack)
         self:simulateSelfDrop({ret = 0})
     end
     seatMgr:userDrop(pack)
+end
+
+function RummyCtrl:simulateCastUserDrop(pack)
+    self:castUserDrop(pack)
 end
 
 function RummyCtrl:backClick()

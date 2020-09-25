@@ -302,6 +302,16 @@ function SeatManager:initInfoCardsNode(dropCard, needAnim)
     }))
 end
 
+function SeatManager:showFinishSlotCard()
+    if not g.myFunc:checkNodeExist(self.infoCardsNode) then return end
+    local card = self.infoCardsNode:getChildByTag(TAG_FINISH_CARD)
+    card:showFront()
+end
+
+function SeatManager:updateFinishSlotCard(cardUint)
+    self:updateSlotCard(TAG_FINISH_CARD, cardUint)
+end
+
 function SeatManager:updateSlotCard(slotTag, cardUint, isShowCardBack)
     if not g.myFunc:checkNodeExist(self.infoCardsNode) then return end
     local card = self.infoCardsNode:getChildByTag(slotTag)
@@ -836,6 +846,11 @@ function SeatManager:selfDrop(pack)
     self:userDrop(pack)
 end
 
+function SeatManager:selfDeclare(pack)
+    self:clearMCardsArea()
+    self:hideAllAreaLights()
+end
+
 function SeatManager:otherDrawCardAnim(pack)
     if not g.myFunc:checkNodeExist(self.infoCardsNode) then return end
     local seatId = self:querySeatIdByUid(pack.uid)
@@ -931,6 +946,17 @@ function SeatManager:otherFinishCardAnim(pack)
             g.myFunc:safeRemoveNode(card)
         end)
     }))
+end
+
+function SeatManager:cardFinishAreaToDiscardArea()
+    if not g.myFunc:checkNodeExist(self.infoCardsNode) then return end
+    local card = self.infoCardsNode:getChildByTag(TAG_FINISH_CARD)
+    if not g.myFunc:checkNodeExist(card) then return end
+    local cardUint = card:getCard()
+    
+    self:updateSlotCard(TAG_FINISH_CARD, -1) -- 隐藏finish牌
+    self:updateSlotCard(TAG_DISCARD_CARD, cardUint)
+    
 end
 
 function SeatManager:userDrop(pack)

@@ -52,6 +52,21 @@ RummyCmdConfig = {
             {name="card", type=T.BYTE},
         }
     },
+    [C.CLI_RUMMY_DECLARE] = {
+        ver = 1,
+        fmt = {
+            {name="uid", type=T.INT},
+            {name="groups", type=T.ARRAY, lengthType=T.BYTE,
+                fmt = {
+                    {name="cards", type=T.ARRAY, lengthType=T.BYTE,
+                        fmt = {
+                            {name="card", type=T.BYTE},
+                        }
+                    }
+                }
+            }
+        }
+    },
     [C.CLI_RUMMY_DROP] = {
         ver = 1,
         fmt = {
@@ -249,6 +264,20 @@ RummyCmdConfig = {
             {name="uid", type=T.INT},
             {name="time", type=T.INT},
             {name="card", type=T.BYTE},
+        }
+    },
+    [C.SVR_RUMMY_DECLARE] = {
+        ver = 1,
+        fmt = {
+            {name="ret", type=T.BYTE},
+        }
+    },
+    [C.SVR_CAST_RUMMY_DECLARE] = {
+        ver = 1,
+        fmt = {
+            {name="uid", type=T.INT},
+            {name="ret", type=T.BYTE},
+            {name="time", type=T.INT, depends = function(ctx) return ctx.ret == 0 end},
         }
     },
     [C.SVR_RUMMY_DROP] = {
