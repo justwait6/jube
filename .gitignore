@@ -1,0 +1,27 @@
+frameworks/runtime-src/proj.android/.gradle/
+frameworks/runtime-src/proj.android/.idea/
+frameworks/runtime-src/proj.android/app/app.iml
+frameworks/runtime-src/proj.android/app/build/
+frameworks/runtime-src/proj.android/app/release/
+frameworks/runtime-src/proj.android/build/
+frameworks/runtime-src/proj.android/app/src/main/assets
+
+frameworks/runtime-src/proj.android/libcocos2dx/build/
+frameworks/runtime-src/proj.android/libcocos2dx/obj/
+frameworks/runtime-src/proj.android/libcocos2dx/src/main/libcocos2dx/armeabi-v7a/
+frameworks/runtime-src/proj.android/libcocos2dx/src/main/libcocos2dx/arm64-v8a/
+frameworks/runtime-src/proj.android/libcocos2dx/libcocos2dx.iml
+frameworks/runtime-src/proj.android/local.properties
+frameworks/runtime-src/proj.android/proj.android.iml
+
+# log file
+debug.log
+
+# local user storage file
+UserDefault.xml
+
+# local database file
+test.db
+
+# dest apk dir
+apk

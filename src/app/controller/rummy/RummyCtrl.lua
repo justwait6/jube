@@ -118,6 +118,8 @@ function RummyCtrl:processPacket_(pack)
 		self:selfDiscard(pack)
 	elseif cmd == CmdDef.SVR_CAST_RUMMY_DISCARD then
 		self:castUserDiscard(pack)
+	elseif cmd == CmdDef.SVR_RUMMY_UPLOAD_GROUPS then
+		printVgg("upload groups, ret: ", pack.ret)
 	end
 end
 

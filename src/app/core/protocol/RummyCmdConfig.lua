@@ -45,6 +45,22 @@ RummyCmdConfig = {
             {name="index", type=T.INT},
         }
     },
+    [C.CLI_RUMMY_UPLOAD_GROUPS] = {
+        ver = 1,
+        fmt = {
+            {name="uid", type=T.INT},
+            {name="groups", type=T.ARRAY, lengthType=T.BYTE,
+                fmt = {
+                    {name="cards", type=T.ARRAY, lengthType=T.BYTE,
+                        fmt = {
+                            {name="card", type=T.BYTE},
+                        }
+                    }
+                }
+            },
+            {name="drawCardPos", type=T.INT},
+        }
+    },
     
 
     --[[
@@ -207,7 +223,12 @@ RummyCmdConfig = {
             {name="dropCard", type=T.BYTE},
         }
     },
-    
+    [C.SVR_RUMMY_UPLOAD_GROUPS] = {
+        ver = 1,
+        fmt = {
+            {name="ret", type=T.BYTE},
+        }
+    },
 }
 
 return RummyCmdConfig
