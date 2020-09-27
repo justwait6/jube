@@ -51,6 +51,7 @@ C.SVR_RUMMY_USER_TURN                   = 0x14A3 -- 广播轮到玩家
 C.SVR_CAST_RUMMY_RESUFFLE               = 0x14A4 -- 广播重新洗牌
 C.SVR_RUMMY_BONUS_TIME                  = 0x14A5 -- 广播玩家bonus time
 C.SVR_RUMMY_USER_MISS_TURNS             = 0x14A6 -- 广播玩家超时次数
+C.SVR_RUMMY_GAME_END_SCORE              = 0x14A7 -- 广播游戏结算(会多次广播)
 C.SVR_RUMMY_DEAL_CARDS                  = 0x0434 -- 游戏发牌
 C.SVR_RUMMY_DRAW_CARD                   = 0x040D -- 请求摸牌返回
 C.SVR_CAST_RUMMY_DRAW_CARD              = 0x140D -- 广播玩家摸牌

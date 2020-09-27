@@ -8,6 +8,7 @@ local roomInfo = require("app.model.rummy.RoomInfo").getInstance()
 local RummyUtil = require("app.model.rummy.RummyUtil")
 
 local DropCardsView = require("app.view.rummy.DropCardsView")
+local ScoreView = require("app.view.rummy.ScoreView")
 
 local PACKET_PROC_FRAME_INTERVAL = 2
 
@@ -138,6 +139,8 @@ function RummyCtrl:processPacket_(pack)
 		printVgg("upload groups, ret: ", pack.ret)
 	elseif cmd == CmdDef.SVR_RUMMY_GET_DROP_CARDS then
 		DropCardsView.new(pack):show()
+	elseif cmd == CmdDef.SVR_RUMMY_GAME_END_SCORE then
+		self:gameEndScore(pack)
 	end
 end
 
@@ -369,6 +372,9 @@ function RummyCtrl:selfDeclare(pack)
         seatMgr:stopCountDown(g.user:getUid())
 		seatMgr:clearTable()
 		roomMgr:clearTable()
+		roomMgr:showViewResultTips(nil, function()
+			ScoreView.new(roomInfo:getDeclareResultDataPack(), self):show()
+		end)
 		seatMgr:selfDeclare(pack)
         if tonumber(pack.ret) == 10 then -- 尝试[first-valid-declare]失败, 弃牌
             self:simulateSelfDrop({ret = 0})
@@ -440,6 +446,52 @@ end
 
 function RummyCtrl:simulateCastUserDrop(pack)
     self:castUserDrop(pack)
+end
+
+function RummyCtrl:gameEndScore(pack)
+    -- 如果自己已经declare,更新或显示declare弹框
+    -- 如果自己没有declare,怎么处理?
+    if not pack then return end
+    g.event:emit(g.eventNames.TIME_OUT_POPUP_CLOSE, {})
+    print("gameEndScore ...")
+    local selfHasDeclare = false
+    local selfIsDrop = false
+    if pack.users then
+        for _, user in pairs(pack.users) do
+            if user and user.uid and tonumber(user.uid) == tonumber(g.user:getUid()) then
+                selfHasDeclare = (tonumber(user.isFinishDeclare) == 1)
+                selfIsDrop = (tonumber(user.isDrop) == 1)
+            end
+        end
+	end
+	print("gameEndScore selfHasDeclare", selfHasDeclare, selfIsDrop)
+	if tonumber(pack.endtype) == 0 then
+		print("gameEndScore 111")
+        self:simulateSelfDeclare({ret = 0})
+        selfHasDeclare = true
+    end
+	if selfHasDeclare or selfIsDrop then
+		print("gameEndScore 122")
+		if selfHasDeclare then
+			print("gameEndScore 133")
+            seatMgr:stopCountDown(g.user:getUid())
+            self:simulateSelfDeclare({ret = 0})
+        end
+    else
+        return
+    end
+
+	local hasScorePopup = g.windowMgr:isHasWindow("ScoreView")
+	print("gameEndScore 144", hasScorePopup)
+    roomMgr:showViewResultTips(nil, function()
+        ScoreView.new(roomInfo:getDeclareResultDataPack(), self):show()
+    end)
+    roomInfo:setDeclareResultDataPack(pack)
+    if hasScorePopup == false then
+        ScoreView.new(pack, self):show()
+    else
+        g.event:emit(g.eventNames.RUMMY_UPDATE_SCORE_VIEW, pack)
+    end
 end
 
 function RummyCtrl:backClick()

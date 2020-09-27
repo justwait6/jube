@@ -3,6 +3,7 @@ local RoomManager = class("RoomManager")
 local roomInfo = require("app.model.rummy.RoomInfo").getInstance()
 local seatMgr = require("app.model.rummy.SeatManager").getInstance()
 local RummyUtil = require("app.model.rummy.RummyUtil")
+local RichTextEx = require("app.core.utils.RichTextEx")
 
 local RVP = require("app.model.rummy.RoomViewPosition")
 local P2 = RVP.OperBtnPosition
@@ -353,13 +354,13 @@ function RoomManager:countDownTips(sec)
 
 	if type(sec) ~= "number" then return end
 	self:tipsMiddle_(string.format(g.lang:getText("RUMMY", "GAME_START_COUNTDOWN_FMT"), sec) )
-	-- PushCenter.pushEvent(g.eventNames.SCORE_POPUP_COUNT, {time = sec, flag = 2})
+	g.event:emit(g.eventNames.RUMMY_SCORE_POPUP_COUNT, {time = sec, flag = 2})
 	g.mySched:cancel(self.schedLoopId_)
 	self.schedLoopId_ = g.mySched:doLoop(function()
 		sec = sec - 1
 		if sec > 0 then
 			self:tipsMiddle_(string.format(g.lang:getText("RUMMY", "GAME_START_COUNTDOWN_FMT"), sec) )
-    		-- PushCenter.pushEvent(g.eventNames.SCORE_POPUP_COUNT, {time = sec, flag = 2})
+    		g.event:emit(g.eventNames.RUMMY_SCORE_POPUP_COUNT, {time = sec, flag = 2})
 			return true
 		else
 			self:hideTipsMiddle_()
@@ -459,10 +460,37 @@ function RoomManager:hideDeclareTips_()
 	if g.myFunc:checkNodeExist(self.declareBg) then self.declareBg:hide() end
 end
 
+function RoomManager:showViewResultTips(vStr, callback)
+	local str = vStr or g.lang:getText("RUMMY", "VIEW_RESULT_TIP")
+	self:hideAllMiddleTips_() -- 时序优先级
+	local width = 320
+	local txtWidth = display.newTTFLabel({text = str, size = 24, color = cc.c3b(0xb4, 0xb3, 0xb3)}):getContentSize().width + 180
+	if txtWidth > width then
+		width = txtWidth
+	end
+	g.myFunc:safeRemoveNode(self.declareBg)
+	self.viewResultBg = display.newScale9Sprite(mResDir .. "tip_mid_bg.png", display.cx, display.cy + 20, cc.size(width, 54)):addTo(self.sceneRoomNode_)
+	self.viewResultBg:setCapInsets(cc.rect(94/2, 54/2, 1, 1))
+	display.newTTFLabel({text = str, size = 24, color = cc.c3b(0xff, 0xff, 0xff)})
+		:pos(self.viewResultBg:getContentSize().width/2 - 70, self.viewResultBg:getContentSize().height/2):addTo(self.viewResultBg)
+	self.viewResultBg:show()
+
+	local richTextStr = string.format([==[
+      <t c="#86eb2c" s="24" id="click">%s</t>
+      ]==], g.lang:getText("RUMMY","CLICK_HERE"))
+    local richTextEx = RichTextEx.new(richTextStr, callback)
+        :addTo(self.viewResultBg)
+        :pos(self.viewResultBg:getContentSize().width - 80, self.viewResultBg:getContentSize().height/2 + 2)
+end
+
+function RoomManager:hideViewResultTips_()
+	if g.myFunc:checkNodeExist(self.viewResultBg) then self.viewResultBg:hide() end
+end
+
 function RoomManager:hideAllMiddleTips_()
 	self:hideTipsMiddle_()
 	self:hideDeclareTips_()
-	-- self:hideViewResultTips_()
+	self:hideViewResultTips_()
 end
 
 function RoomManager:clearTable()
