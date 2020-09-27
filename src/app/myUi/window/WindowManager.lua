@@ -69,7 +69,7 @@ end
     @param noOpenAnim: 禁止弹窗开启时动画, true表示禁止, 默认false
     @param background: window背景, string类型
 --]]
-function WindowManager:addWindow(window, isModal, isBgCoverTouchClose, noOpenAnim, background)
+function WindowManager:addWindow(window, name, isModal, isBgCoverTouchClose, noOpenAnim, background)
     -- 添加模态
     isModal = (isModal ~= false) -- 默认为true, 当传入false时为false
     if isModal then
@@ -89,7 +89,7 @@ function WindowManager:addWindow(window, isModal, isBgCoverTouchClose, noOpenAni
     if self:isHasWindow(window) then
         self:removeWindow(window)
     end
-    table.insert(self.windowStack_, {window = window, isBgCoverTouchClose = isBgCoverTouchClose, isModal = isModal})
+    table.insert(self.windowStack_, {window = window, name = name, isBgCoverTouchClose = isBgCoverTouchClose, isModal = isModal})
 
     -- 设置层级
     window:addTo(self.viewContainer_, self.zOrder_)
@@ -161,8 +161,13 @@ end
     @param window: 被检测的弹窗
     @return: boolean类型, true表示已有
 --]]
-function WindowManager:isHasWindow(window)
-    return self:getWindowIndex(window) ~= -1
+function WindowManager:isHasWindow(windowName)
+    for i, windowData in ipairs(self.windowStack_) do
+        if windowData.name == windowName then
+            return true
+        end
+    end
+    return false
 end 
 
 --[[

@@ -11,12 +11,13 @@ function Window:ctor(params)
 
 	local isModal = params.isModal or false
 	local isCoverClose = params.isCoverClose or false
+	local name = params.name or ""
 	if isModal then
 		-- 模态框点击背景透明遮罩区域不会关闭
 		isCoverClose = false
 	end
 	local noShowAnim = false
-	g.windowMgr:addWindow(self, isModal, isCoverClose, noShowAnim)
+	g.windowMgr:addWindow(self, name, isModal, isCoverClose, noShowAnim)
 end
 
 function Window:addClose(point)
