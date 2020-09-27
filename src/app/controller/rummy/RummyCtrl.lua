@@ -7,6 +7,8 @@ local RummyConst = require("app.model.rummy.RummyConst")
 local roomInfo = require("app.model.rummy.RoomInfo").getInstance()
 local RummyUtil = require("app.model.rummy.RummyUtil")
 
+local DropCardsView = require("app.view.rummy.DropCardsView")
+
 local PACKET_PROC_FRAME_INTERVAL = 2
 
 function RummyCtrl:ctor()
@@ -134,6 +136,8 @@ function RummyCtrl:processPacket_(pack)
 		self:castUserDrop(pack)
 	elseif cmd == CmdDef.SVR_RUMMY_UPLOAD_GROUPS then
 		printVgg("upload groups, ret: ", pack.ret)
+	elseif cmd == CmdDef.SVR_RUMMY_GET_DROP_CARDS then
+		DropCardsView.new(pack):show()
 	end
 end
 

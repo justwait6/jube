@@ -249,7 +249,7 @@ function SeatManager:initInfoCardsNode(dropCard, needAnim)
     g.myUi.ScaleButton.new({normal = mResDir .. "dropcards_icon.png"})
         :onClick(handler(self, function(sender)
             if g.mySocket:isConnected() then
-                g.mySocket:send(g.mySocket:createPacketBuilder(CmdDef.CLI_RUMMY_GET_DROP_CARD)
+                g.mySocket:send(g.mySocket:createPacketBuilder(CmdDef.CLI_RUMMY_GET_DROP_CARDS)
                     :setParameter("uid", tonumber(g.user:getUid())):build())
             end
         end))

@@ -23,13 +23,6 @@ RummyCmdConfig = {
             {name = "tid", type = T.INT},
         }
     },
-    [C.CLI_EXIT_ROOM] = {
-        ver = 1,
-        fmt = {
-            {name = "uid", type = T.INT},
-            {name = "tid", type = T.INT},
-        }
-    },
     [C.CLI_RUMMY_DRAW_CARD] = {
         ver = 1,
         fmt = {
@@ -87,6 +80,12 @@ RummyCmdConfig = {
                 }
             },
             {name="drawCardPos", type=T.INT},
+        }
+    },
+    [C.CLI_RUMMY_GET_DROP_CARDS] = {
+        ver = 1,
+        fmt = {
+            {name="uid", type=T.INT},
         }
     },
     
@@ -300,6 +299,16 @@ RummyCmdConfig = {
         ver = 1,
         fmt = {
             {name="ret", type=T.BYTE},
+        }
+    },
+    [C.SVR_RUMMY_GET_DROP_CARDS] = {
+        ver = 1,
+        fmt = {
+            {name="cards",type=T.ARRAY,lengthType=T.BYTE,
+                    fmt = {
+                            {name="card",type=T.BYTE},
+                    },
+            },
         }
     },
 }
