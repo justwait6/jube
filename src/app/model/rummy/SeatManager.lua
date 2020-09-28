@@ -1355,6 +1355,8 @@ function SeatManager:clearTable()
     for i = 0, RummyConst.UserNum - 1 do
         self.seats_[i]:clearTable()
     end
+    self:clearMCardsArea()
+    g.myFunc:safeRemoveNode(self.infoCardsNode)
 end
 
 function SeatManager:XXXX()

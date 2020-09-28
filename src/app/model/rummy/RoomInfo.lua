@@ -134,14 +134,6 @@ function RoomInfo:getDeclareResultDataPack()
     return self.declareResultPack_ or {}
 end
 
-function RoomInfo:setIsNewRoundCount(isNewRoundCount)
-    self.isNewRoundCount = isNewRoundCount
-end
-
-function RoomInfo:getIsNewRoundCount()
-    return self.isNewRoundCount
-end
-
 function RoomInfo:clearMCards()
    self.mCards = {}
    self.curGroups = {}

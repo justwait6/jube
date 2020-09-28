@@ -168,7 +168,17 @@ function WindowManager:isHasWindow(windowName)
         end
     end
     return false
-end 
+end
+
+function WindowManager:removeWindowIfByName(windowName)
+    for i, windowData in ipairs(self.windowStack_) do
+        if windowData.name == windowName then
+            self:removeWindow(windowData.window);
+            return true;
+        end
+    end
+    return false
+end
 
 --[[
     @func getWindowIndex: 查找某个window的索引值, -1表示没有找到

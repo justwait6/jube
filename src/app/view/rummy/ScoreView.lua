@@ -19,10 +19,10 @@ function ScoreView:ctor(pack, rummyCtrl)
     self.name = "ScoreView" -- 名字用于检测window是否存在
 
     self.rummyCtrl_ = rummyCtrl
-	ScoreView.super.ctor(self, {name = self.name, width = self.WIDTH, height = self.HEIGHT, bgRes = mResDir .. "bg.png"})
+	ScoreView.super.ctor(self, {name = self.name, width = self.WIDTH, height = self.HEIGHT, bgRes = mResDir .. "bg.png", isCoverClose = true})
 
     g.event:on(g.eventNames.RUMMY_UPDATE_SCORE_VIEW, handler(self, self.updateData), self)
-    g.event:on(g.eventNames.RUMMY_SCORE_POPUP_COUNT, handler(self, self.countDown), self)
+    g.event:on(g.eventNames.RUMMY_SCORE_POPUP_COUNT, handler(self, self.updateGameStartCountDown), self)
 
     -- Close Btn
     local closeBtn = g.myUi.ScaleButton.new({normal = g.Res.blank})
@@ -129,36 +129,19 @@ function ScoreView:ctor(pack, rummyCtrl)
         :setSwallowTouches(true)
 
     self:updateData(pack)
-
-    local declaretime = roomInfo:getDeclareTime()
-    local declaretimeMinus = roomInfo:getDeclareTimeMinus()
-    local second = g.timeUtil:getSocketTime() - declaretimeMinus
-    print("ScoreView:ctor ", declaretime, declaretimeMinus, second)
-    if second > 0 then
-        local time = math.floor(second)
-        if declaretime > 0 then
-            local t = declaretime - time
-            print("ScoreView:ctor 111", roomInfo:getIsNewRoundCount())
-            if t > 0 then
-                local isNewRoundCount = roomInfo:getIsNewRoundCount()
-                if not isNewRoundCount then
-                    self:countDown({time = t, flag = 1})
-                end
-            end
-        end
-    end
     
-    print("ScoreView:ctor 222", roomInfo:getIsNewRoundCount())
-    if not roomInfo:getIsNewRoundCount() then
+    if tonumber(pack.endtype) ~= 0 then
+        local declaretime = roomInfo:getDeclareTime()
+        local declaretimeMinus = roomInfo:getDeclareTimeMinus()
         g.mySched:cancel(self.loopSchedId_)
+        local t1 = declaretime - math.floor(g.timeUtil:getSocketTime() - declaretimeMinus)
+        if t1 > 0 then
+            self:updateCountStr({time = t1, flag = 1})
+        end
         self.loopSchedId_ = g.mySched:doLoop(function()
-                local t1 = declaretime - math.floor(g.timeUtil:getSocketTime() - declaretimeMinus)
-                print("ScoreView:ctor 333", t1)
+                t1 = declaretime - math.floor(g.timeUtil:getSocketTime() - declaretimeMinus)
                 if t1 > 0 then
-                    print("ScoreView:ctor 444", roomInfo:getIsNewRoundCount())
-                    if not roomInfo:getIsNewRoundCount() then
-                        self:countDown({time = t1, flag = 1})
-                    end
+                    self:updateCountStr({time = t1, flag = 1})
                 else
                     g.mySched:cancel(self.loopSchedId_)
                 end
@@ -167,7 +150,14 @@ function ScoreView:ctor(pack, rummyCtrl)
     end
 end
 
-function ScoreView:countDown(pack)
+function ScoreView:updateGameStartCountDown(pack)
+    g.mySched:cancel(self.loopSchedId_)
+    if self and self.updateCountStr then
+        self:updateCountStr(pack)
+    end
+end
+
+function ScoreView:updateCountStr(pack)
     if pack then
         if pack.flag and pack.flag == 1 then
             self.countLabel:setString(string.format(g.lang:getText("RUMMY", "SCORE_WINDOW_DECLARE_COUNT"), pack.time or 0))

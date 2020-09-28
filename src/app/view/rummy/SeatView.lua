@@ -88,7 +88,9 @@ function SeatView:updateSeatConfig()
     else
         self.sitdown:hide()
     end
-    
+    if self:getUid() < 0 then
+        self.miniInfoNode:hide()
+    end
 end
 
 function SeatView:setUid(uid)
@@ -303,7 +305,7 @@ function SeatView:standUp()
 end
 
 function SeatView:clearTable()
-    -- self:hideFoldTxt()
+    self:hideFoldTxt()
     -- self:hideAwayTxt()
     self:clearSchedule()
 end

@@ -248,6 +248,8 @@ function RummyCtrl:gameStart(pack)
 	seatMgr:gameStart(pack, function()
 		roomMgr:updateDSeat(roomInfo:getDSeatId(), true)
 	end)
+
+	g.windowMgr:removeWindowIfByName("ScoreView")
 end
 
 function RummyCtrl:startDealCards(pack, needAnim)
@@ -401,9 +403,6 @@ function RummyCtrl:selfDeclare(pack)
         seatMgr:stopCountDown(g.user:getUid())
 		seatMgr:clearTable()
 		roomMgr:clearTable()
-		roomMgr:showViewResultTips(nil, function()
-			ScoreView.new(roomInfo:getDeclareResultDataPack(), self):show()
-		end)
 		seatMgr:selfDeclare(pack)
         if tonumber(pack.ret) == 10 then -- 尝试[first-valid-declare]失败, 弃牌
             self:simulateSelfDrop({ret = 0})
@@ -427,7 +426,6 @@ function RummyCtrl:castUserDeclare(pack)
         -- 保存其他玩家declare时间
         roomInfo:setDeclareTime(pack.time)
         roomInfo:setDeclareTimeMinus(g.timeUtil:getSocketTime())
-        roomInfo:setIsNewRoundCount(false)
     else -- declare失败
         -- finish牌移动到弃牌区域
         seatMgr:cardFinishAreaToDiscardArea()
@@ -482,7 +480,6 @@ function RummyCtrl:gameEndScore(pack)
     -- 如果自己没有declare,怎么处理?
     if not pack then return end
     g.event:emit(g.eventNames.TIME_OUT_POPUP_CLOSE, {})
-    print("gameEndScore ...")
     local selfHasDeclare = false
     local selfIsDrop = false
     if pack.users then
@@ -493,30 +490,28 @@ function RummyCtrl:gameEndScore(pack)
             end
         end
 	end
-	print("gameEndScore selfHasDeclare", selfHasDeclare, selfIsDrop)
 	if tonumber(pack.endtype) == 0 then
-		print("gameEndScore 111")
         self:simulateSelfDeclare({ret = 0})
-        selfHasDeclare = true
+		selfHasDeclare = true
     end
 	if selfHasDeclare or selfIsDrop then
-		print("gameEndScore 122")
 		if selfHasDeclare then
-			print("gameEndScore 133")
             seatMgr:stopCountDown(g.user:getUid())
             self:simulateSelfDeclare({ret = 0})
         end
     else
         return
-    end
+	end
+	
+	if tonumber(pack.endtype) ~= 0 then
+		roomMgr:showViewResultTips(nil, function()
+			ScoreView.new(roomInfo:getDeclareResultDataPack(), self):show()
+		end)
+	end
 
-	local hasScorePopup = g.windowMgr:isHasWindow("ScoreView")
-	print("gameEndScore 144", hasScorePopup)
-    roomMgr:showViewResultTips(nil, function()
-        ScoreView.new(roomInfo:getDeclareResultDataPack(), self):show()
-    end)
+	local hasWindow = g.windowMgr:isHasWindow("ScoreView")    
     roomInfo:setDeclareResultDataPack(pack)
-    if hasScorePopup == false then
+    if hasWindow == false then
         ScoreView.new(pack, self):show()
     else
         g.event:emit(g.eventNames.RUMMY_UPDATE_SCORE_VIEW, pack)
