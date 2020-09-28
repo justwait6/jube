@@ -13,7 +13,6 @@ function HallView:ctor()
 
 	self:setNodeEventEnabled(true)
 	self:initialize()
-	self:addEventListeners()
 end
 
 function HallView:initialize()
@@ -52,10 +51,6 @@ function HallView:initialize()
 		:addTo(self, 1)
 end
 
-function HallView:addEventListeners()
-	g.event:on(g.eventNames.GET_TABLE_RESP, handler(self.ctrl, self.ctrl.onGetTableResp), self)
-end
-
 function HallView:playShowAnim()
 	if self.actListView and self.actListView.playShowAnim then
 		self.actListView:playShowAnim()
@@ -78,7 +73,7 @@ function HallView:XXXX()
 end
 
 function HallView:onCleanup()
-	g.event:removeByTag(self)
+	self.ctrl:dispose()
 end
 
 return HallView

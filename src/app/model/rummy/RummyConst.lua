@@ -15,7 +15,6 @@ RummyConst.USER_SEAT = 0 --玩家坐下
 RummyConst.USER_PLAY = 1 -- 正在玩牌
 RummyConst.USER_FOLD = 2 --玩家弃牌
 
-RummyConst.isFinalGame = true -- 是否处于游戏结束到下局开始之间
 RummyConst.isMeInGames = false
 
 RummyConst.chipNumberPath1 = {}

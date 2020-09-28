@@ -493,6 +493,18 @@ function RoomManager:hideAllMiddleTips_()
 	self:hideViewResultTips_()
 end
 
+function RoomManager:selfInGameReconnectInfo(pack)
+	if pack.mPlayer then
+		if tonumber(pack.mPlayer.operStatus) == 0 then -- 不该玩家操作
+			self:onNotSelfTurn()
+		elseif tonumber(pack.mPlayer.operStatus) == 1 then -- 该拿牌
+			self:onSelfTurn()
+		elseif tonumber(pack.mPlayer.operStatus) == 2 then -- 该出牌
+			self:AfterSelfDrawCard()
+		end
+	end
+end
+
 function RoomManager:clearTable()
 	self.isSelfTurn = false
 	self.dropWhenTurn = false

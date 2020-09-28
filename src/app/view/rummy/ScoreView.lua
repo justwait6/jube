@@ -133,27 +133,34 @@ function ScoreView:ctor(pack, rummyCtrl)
     local declaretime = roomInfo:getDeclareTime()
     local declaretimeMinus = roomInfo:getDeclareTimeMinus()
     local second = g.timeUtil:getSocketTime() - declaretimeMinus
+    print("ScoreView:ctor ", declaretime, declaretimeMinus, second)
     if second > 0 then
         local time = math.floor(second)
         if declaretime > 0 then
             local t = declaretime - time
+            print("ScoreView:ctor 111", roomInfo:getIsNewRoundCount())
             if t > 0 then
                 local isNewRoundCount = roomInfo:getIsNewRoundCount()
                 if not isNewRoundCount then
-                    g.event:emit(g.eventNames.RUMMY_SCORE_POPUP_COUNT, {time = t, flag = 1})
+                    self:countDown({time = t, flag = 1})
                 end
             end
         end
     end
     
+    print("ScoreView:ctor 222", roomInfo:getIsNewRoundCount())
     if not roomInfo:getIsNewRoundCount() then
         g.mySched:cancel(self.loopSchedId_)
         self.loopSchedId_ = g.mySched:doLoop(function()
                 local t1 = declaretime - math.floor(g.timeUtil:getSocketTime() - declaretimeMinus)
+                print("ScoreView:ctor 333", t1)
                 if t1 > 0 then
+                    print("ScoreView:ctor 444", roomInfo:getIsNewRoundCount())
                     if not roomInfo:getIsNewRoundCount() then
-                        g.event:emit(g.eventNames.RUMMY_SCORE_POPUP_COUNT, {time = t1, flag = 1})
+                        self:countDown({time = t1, flag = 1})
                     end
+                else
+                    g.mySched:cancel(self.loopSchedId_)
                 end
                 return true
             end, 1)

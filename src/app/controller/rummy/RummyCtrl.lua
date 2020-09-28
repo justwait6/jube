@@ -151,34 +151,33 @@ function RummyCtrl:enterRoom(pack)
 		pack.dSeatId = seatMgr:querySeatIdByUid(pack.dUid)
 		roomMgr:enterRoomInfo(pack, pack.mPlayer.money)
 		seatMgr:initSeats(pack)
-		-- if pack.state and tonumber(pack.state) == 1 then -- 游戏正在进行
-		-- 	RummyConst.isFinalGame = false
-		-- 	self:simulateStartDealCards(pack)
-		-- 	self:simulateUserTurn(pack)
-		-- 	seatMgr:inGameReconnectInfo(pack)
-		-- 	print("enterRoom: isSelfInGame", self:isSelfInGame(pack.users))
-		-- 	if self:isSelfInGame(pack.users) then -- 自己正在玩
-		-- 		pack.cards = RummyUtil.calcMCardsByReconnect(pack.groups, pack.drawCardPos)
-		-- 		roomInfo:setMCards(pack.cards)
-		-- 		roomMgr:selfInGameReconnectInfo(pack)
-		-- 		seatMgr:selfInGameReconnectInfo(pack)
-		-- 		local isOk = RummyUtil.refreshGroupsByReconnect(pack.groups, pack.drawCardPos)
-		-- 		print("enterRoom: refreshGroupsByReconnect", isOk)
-		-- 		if isOk then
-		-- 			seatMgr:updateMCards(roomInfo:getCurGroups(), true)
-		-- 		end
-		-- 		if tonumber(pack.mPlayer.isNeedDeclare) == 1 then -- 需要declare
-		-- 			seatMgr:updateFinishSlotCard(pack.finishCard)
-		-- 			self:simulateNotifyLeftMeDeclare({time = pack.leftOperSec})
-		-- 		elseif tonumber(pack.mPlayer.isFinishDeclare) == 1 then -- 自己已完成declare, 结算界面
-		-- 			print("todo, 展示结算界面")
-		-- 		end
-		-- 	elseif tonumber(pack.mPlayer.isDrop) == 1 then -- 自己已经弃牌
-		-- 		self:simulateSelfDrop({ret = 0})
-		-- 	else -- 等待, 观战中
-		-- 		roomMgr:showWaitNextGameTips()
-		-- 	end
-		-- end
+		if pack.state and tonumber(pack.state) == 1 then -- 游戏正在进行
+			self:simulateStartDealCards(pack)
+			self:simulateUserTurn(pack)
+			seatMgr:inGameReconnectInfo(pack)
+			print("enterRoom: isSelfInGame", self:isSelfInGame(pack.users))
+			if self:isSelfInGame(pack.users) then -- 自己正在玩
+				pack.cards = RummyUtil.calcMCardsByReconnect(pack.groups, pack.drawCardPos)
+				roomInfo:setMCards(pack.cards)
+				roomMgr:selfInGameReconnectInfo(pack)
+				seatMgr:selfInGameReconnectInfo(pack)
+				local isOk = RummyUtil.refreshGroupsByReconnect(pack.groups, pack.drawCardPos)
+				print("enterRoom: refreshGroupsByReconnect", isOk)
+				if isOk then
+					seatMgr:updateMCards(roomInfo:getCurGroups(), true)
+				end
+				if tonumber(pack.mPlayer.isNeedDeclare) == 1 then -- 需要declare
+					seatMgr:updateFinishSlotCard(pack.finishCard)
+					self:simulateNotifyLeftMeDeclare({time = pack.leftOperSec})
+				elseif tonumber(pack.mPlayer.isFinishDeclare) == 1 then -- 自己已完成declare, 结算界面
+					print("todo, 展示结算界面")
+				end
+			elseif tonumber(pack.mPlayer.isDrop) == 1 then -- 自己已经弃牌
+				self:simulateSelfDrop({ret = 0})
+			else -- 等待, 观战中
+				roomMgr:showWaitNextGameTips()
+			end
+		end
 	else 
 		local msg = "unknown error"
 		if pack.ret == 3 then
@@ -198,6 +197,16 @@ function RummyCtrl:enterRoom(pack)
 				g.myApp:enterScene("HallScene")
 			end, 1.5)
 	end
+end
+
+function RummyCtrl:isSelfInGame(curPlayers)
+	if type(curPlayers) ~= "table" or (#curPlayers) <= 0 then return end
+	for i = 1, #curPlayers do
+        if tonumber(curPlayers[i].uid) == tonumber(g.user:getUid()) and tonumber(curPlayers[i].isDrop) ~= 1 then -- 在玩, 没有弃牌
+			return true
+		end
+	end
+	return false
 end
 
 function RummyCtrl:mPlayerLoginInfo(players, users)
@@ -250,6 +259,17 @@ function RummyCtrl:startDealCards(pack, needAnim)
 	end)
 end
 
+-- 前提: 重连包, 用户在玩(桌子状态在玩)
+function RummyCtrl:simulateStartDealCards(pack)
+	if tonumber(pack.state) ~= 1 then return end
+	local simulatePack = {}
+    simulatePack.magicCard = pack.magicCard
+    simulatePack.dropCard = pack.dropCard
+    simulatePack.heapCardNum = pack.heapCardNum
+    simulatePack.cards = pack.cards or {}
+    self:startDealCards(simulatePack, false)
+end
+
 function RummyCtrl:castUserTurn(pack)
 	if not pack then return end
 	local name = seatMgr:queryUsernameByUid(pack.uid)
@@ -265,6 +285,15 @@ function RummyCtrl:castUserTurn(pack)
 		seatMgr:hideAllAreaLights() -- 不到用户自己, 隐藏亮光
 	end
 	seatMgr:startCountDown(pack.time or 0, pack.uid)
+end
+
+-- 前提: 重连包, 用户在玩(桌子状态在玩)
+function RummyCtrl:simulateUserTurn(pack)
+	if tonumber(pack.state) ~= 1 then return end
+	local simulatePack = {}
+    simulatePack.uid = pack.operUid
+	simulatePack.time = pack.leftOperSec
+	self:castUserTurn(simulatePack)
 end
 
 function RummyCtrl:selfDraw(pack)

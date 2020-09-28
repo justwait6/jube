@@ -124,6 +124,7 @@ RummyCmdConfig = {
             {name="drawCardPos", type=T.INT, depends = function(ctx) return ctx.ret == 0 and (ctx.state == 1) end},
             {name="dropCard", type=T.BYTE, depends = function(ctx) return ctx.ret == 0 and (ctx.state == 1) end},
             {name="magicCard", type=T.BYTE, depends = function(ctx) return ctx.ret == 0 and (ctx.state == 1) end},
+            {name="finishCard", type=T.BYTE, depends = function(ctx) return ctx.ret == 0 and (ctx.state == 1) end},
             {name="heapCardNum", type=T.INT, depends = function(ctx) return ctx.ret == 0 and (ctx.state == 1) end},
             {name="operUid", type=T.INT, depends = function(ctx) return ctx.ret == 0 and (ctx.state == 1) end},
             {name="leftOperSec", type=T.INT, depends = function(ctx) return ctx.ret == 0 and (ctx.state == 1) end},
@@ -134,7 +135,7 @@ RummyCmdConfig = {
                     {name="isDrop", type=T.BYTE},
                     {name="isNeedDeclare", type=T.BYTE},
                     {name="isFinishDeclare", type=T.BYTE},
-                    {name="groups", type=T.ARRAY, lengthType=T.BYTE,depends = function(ctx) return ctx.ret == 0 and (ctx.state == 1) end,
+                    {name="groups", type=T.ARRAY, lengthType=T.BYTE,
                         fmt = {
                             {name="cards", type=T.ARRAY, lengthType=T.BYTE,
                                 fmt = {
@@ -145,7 +146,6 @@ RummyCmdConfig = {
                     }
                 }
             },
-            {name="finishCard", type=T.BYTE, depends = function(ctx) return ctx.ret == 0 and (ctx.state == 1) end},
         }
     },
     [C.SVR_EXIT_ROOM] = {

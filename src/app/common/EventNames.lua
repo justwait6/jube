@@ -13,6 +13,7 @@ end
 E.LOBBY_UPDATE = E.getName()
 E.USER_INFO_UPDATE = E.getName()
 E.SERVER_PUSH = E.getName()
+E.SVR_SEND_HALL_LOGIN = E.getName()
 E.PACKET_RECEIVED = E.getName()
 E.SEND_CHAT_RESP = E.getName()
 E.GET_TABLE_RESP = E.getName()

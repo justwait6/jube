@@ -1315,6 +1315,32 @@ function SeatManager:queryUsernameByUid(uid)
     return userinfo.nickName
 end
 
+function SeatManager:inGameReconnectInfo(pack)
+    -- 更新弃牌玩家
+    if type(pack.users) == "table" then
+        for _, user in pairs(pack.users) do
+            if user and tonumber(user.isDrop) == 1 then
+                if tonumber(user.uid) == tonumber(g.user:getUid()) then
+                    self:selfDrop({uid = user.uid})
+                end
+                self:userDrop({uid = user.uid})
+            end
+        end
+    end 
+end
+
+function SeatManager:selfInGameReconnectInfo(pack)
+    if pack.mPlayer then
+        if tonumber(pack.mPlayer.operStatus) == 0 then -- 不该玩家操作
+            self:hideAllAreaLights()
+        elseif tonumber(pack.mPlayer.operStatus) == 1 then -- 该拿牌
+            self:showAreaLightsDrawStage()
+        elseif tonumber(pack.mPlayer.operStatus) == 2 then -- 该出牌
+            self:showAreaLightsDiscardStage()
+		end
+    end
+end
+
 function SeatManager:clearMCardsArea()
     g.myFunc:safeRemoveNode(self.mCardsNode)
     g.myFunc:safeRemoveNode(self.mGroupInfoNode)

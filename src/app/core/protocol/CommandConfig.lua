@@ -71,6 +71,12 @@ CommandConfig = {
             }
         }
     },
+    [C.SVR_HALL_LOGIN] = {
+        ver = 1,
+        fmt = {
+            {name = "ret", type = T.BYTE},
+        }
+    },
     [C.SVR_PUSH] = {
         ver = 1,
         fmt = {

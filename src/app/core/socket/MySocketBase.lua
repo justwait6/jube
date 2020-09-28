@@ -242,6 +242,8 @@ function MySocketBase:onReceivePacket(pack)
 
     if pack.cmd == self.CmdDef.SVR_HEART_BEAT then
         self:onHeartBeatReceived_()
+    elseif pack.cmd == self.CmdDef.SVR_HALL_LOGIN then
+        g.event:emit(g.eventNames.SVR_SEND_HALL_LOGIN, pack)
     elseif pack.cmd == self.CmdDef.SVR_PUSH then
         if pack.uid == g.user:getUid() then
             g.event:emit(g.eventNames.SERVER_PUSH, pack)

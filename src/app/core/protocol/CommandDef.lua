@@ -34,6 +34,7 @@ C.CLI_RUMMY_USER_BACK                   = 0x041A -- Rummy玩家通报"I am back"
 
 -- SERVER
 C.SVR_HEART_BEAT                        = 0x0201 -- 心跳返回
+C.SVR_HALL_LOGIN                        = 0x0203 -- 登录大厅
 C.SVR_PUSH                              = 0x0205 -- 服务器自定义推送
 C.SVR_SEND_CHAT_RESP                    = 0x0301 -- 聊天返回
 C.SVR_FORWARD_CHAT                      = 0x0303 -- 转发聊天
