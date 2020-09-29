@@ -1,16 +1,26 @@
 apply plugin: 'com.android.application'
 android {
-    compileSdkVersion 26
+    compileSdkVersion 28
     buildToolsVersion '28.0.3'
+
+    signingConfigs {
+        config {
+            keyAlias 'key0'
+            keyPassword '123456'
+            storeFile file('D:/source/myproject/jube/keystore/jube.jks')
+            storePassword '123456'
+        }
+    }
 
     defaultConfig {
         applicationId "com.vector.jube"
-        minSdkVersion 14
-        targetSdkVersion 26
+        minSdkVersion 15
+        targetSdkVersion 28
         versionCode 1
         versionName "1.0"
 
         ndk {
+            abiFilters "arm64-v8a"
             abiFilters "armeabi-v7a"
         }
     }
@@ -18,9 +28,28 @@ android {
     buildTypes {
         release {
             minifyEnabled false
+            signingConfig signingConfigs.config
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
+    android.applicationVariants.all { variant ->
+        variant.outputs.all {
+            // variant.getPackageApplication().outputDirectory = new File(project.rootDir.absolutePath + "")
+            outputFileName = "${defaultConfig.applicationId}_${defaultConfig.versionName}_${releaseTime()}.apk"
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+}
+
+
+static def releaseTime() {
+    return new Date().format("yyyy-MM-dd", TimeZone.getTimeZone("UTC"))
 }
 
 dependencies {
