@@ -23,16 +23,22 @@ function HallView:initialize()
     	:pos(0, 100)
 		:addTo(self)
 	
-	g.myUi.ScaleButton.new({normal = g.Res.common_btnBlueS})
-		:setButtonLabel(display.newTTFLabel({size = 24, text = g.lang:getText("HALL", "ENTER_ROOM")}))
-		:onClick(handler(self.ctrl, self.ctrl.getTable))
+		g.myUi.ScaleButton.new({normal = g.Res.common_btnBlueS})
+		:setButtonLabel(display.newTTFLabel({size = 24, text = g.lang:getText("HALL", "DIZHU")}))
+		:onClick(handler(self.ctrl, self.ctrl.getDizhuTable))
 		:pos(0, 0)
+		:addTo(self)
+
+	g.myUi.ScaleButton.new({normal = g.Res.common_btnBlueS})
+		:setButtonLabel(display.newTTFLabel({size = 24, text = g.lang:getText("HALL", "RUMMY")}))
+		:onClick(handler(self.ctrl, self.ctrl.getRummyTable))
+		:pos(0, -100)
 		:addTo(self)
 
 	g.myUi.ScaleButton.new({normal = g.Res.common_btnBlueS})
 		:setButtonLabel(display.newTTFLabel({size = 24, text = g.lang:getText("COMMON", "LOGOUT")}))
 		:onClick(handler(self.ctrl, self.ctrl.logout))
-		:pos(0, -100)
+		:pos(0, -200)
 		:addTo(self)
 
 	-- 自己头像
