@@ -1,25 +1,25 @@
-local RummyView = class("RummyView", function ()
+local RoomView = class("RoomView", function ()
 	return display.newNode()
 end)
 
-local RummyCtrl = require("app.controller.rummy.RummyCtrl")
+local RoomCtrl = require("app.controller.rummy.RoomCtrl")
 local DownMenuView = require("app.view.rummy.DownMenuView")
 
-local RummyConst = require("app.model.rummy.RummyConst")
+local RoomConst = require("app.model.rummy.RoomConst")
 local RVP = require("app.model.rummy.RoomViewPosition")
 local P1 = RVP.SeatPosition
 
 local mResDir = "image/rummy/" -- module resource directory
 
-function RummyView:ctor(scene)
+function RoomView:ctor(scene)
 	self.scene = scene
-	self.ctrl = RummyCtrl.new(self)
+	self.ctrl = RoomCtrl.new(self)
 	self:setNodeEventEnabled(true)
 	self:initialize()
 	self:addEventListeners()
 end
 
-function RummyView:initialize()
+function RoomView:initialize()
 	-- table bg
 	local roombg = display.newSprite(mResDir .. "room_bg.png")
 		:pos(display.cx, display.cy)
@@ -40,29 +40,29 @@ function RummyView:initialize()
 	self.ctrl:initAnimNode(self.scene.nodes.animNode)
 end
 
-function RummyView:addEventListeners()
+function RoomView:addEventListeners()
 	g.event:on(g.eventNames.LOBBY_UPDATE, handler(self, self.XXXX), self)
 end
 
-function RummyView:menu()
+function RoomView:menu()
 	print(1)
 end
 
-function RummyView:requestChangeTable()
+function RoomView:requestChangeTable()
 	print(2)
 end
 
-function RummyView:openRulePop()
+function RoomView:openRulePop()
 	print(3)
 end
 
-function RummyView:XXXX()
+function RoomView:XXXX()
 	
 end
 
-function RummyView:onCleanup()
+function RoomView:onCleanup()
 	g.event:removeByTag(self)
 	self.ctrl:dispose()
 end
 
-return RummyView
+return RoomView

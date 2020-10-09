@@ -66,7 +66,7 @@ function SeatManager:castUserSit(pack)
         local user = self:insertUser(pack)
         self:initPlayerViewWithSeatId(user)  
         local seat = self:getSeatByUid(user.uid)
-        local toSeatId = RummyUtil.getFixSeatId(pack.seatId or -1)
+        local toSeatId = RoomUtil.getFixSeatId(pack.seatId or -1)
         seat:show()
         self:startSeatMove(seat, user.seatId, toSeatId)
     end

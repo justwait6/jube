@@ -2,7 +2,7 @@ local RoomManager = class("RoomManager")
 
 local roomInfo = require("app.model.rummy.RoomInfo").getInstance()
 local seatMgr = require("app.model.rummy.SeatManager").getInstance()
-local RummyUtil = require("app.model.rummy.RummyUtil")
+local RoomUtil = require("app.model.rummy.RoomUtil")
 local RichTextEx = require("app.core.utils.RichTextEx")
 
 local RVP = require("app.model.rummy.RoomViewPosition")
@@ -25,8 +25,8 @@ function RoomManager:addEventListeners()
 	g.event:on(g.eventNames.RUMMY_CHOSEN_CARD_CHANGE, handler(self, self.onChosenCardChange), self)
 end
 
-function RoomManager:setRummyCtrl(rummyCtrl)
-	self.rummyCtrl_ = rummyCtrl
+function RoomManager:setRoomCtrl(roomCtrl)
+	self.roomCtrl_ = roomCtrl
 end
 
 function RoomManager:initRoomNode(sceneRoomNode)
@@ -69,7 +69,7 @@ function RoomManager:initOperBtn()
 	self.drawCardBtn1 = g.myUi.ScaleButton.new({normal = g.Res.blank})
 	:onClick(handler(self, function(sender)
 		printVgg("drawCardBtn1 onclick...")
-		self.rummyCtrl_:sendCliDrawCard(0)
+		self.roomCtrl_:sendCliDrawCard(0)
 	end))
 	:addTo(self.sceneRoomNode_)
 	:pos(newHeapPos.x, newHeapPos.y)
@@ -81,7 +81,7 @@ function RoomManager:initOperBtn()
 	local oldHeapPos = RVP.OldHeapPos
 	self.drawCardBtn2 = g.myUi.ScaleButton.new({normal = g.Res.blank})
 	:onClick(handler(self, function(sender)
-		self.rummyCtrl_:sendCliDrawCard(1)
+		self.roomCtrl_:sendCliDrawCard(1)
 	end))
 	:addTo(self.sceneRoomNode_)
 	:pos(oldHeapPos.x, oldHeapPos.y)
@@ -96,7 +96,7 @@ function RoomManager:initOperBtn()
 		if self.dropBtn:getChildByTag(1):isVisible() then -- 有check框
 			self:onPreDropClick()
 		else
-			self.rummyCtrl_:sendCliDrop()
+			self.roomCtrl_:sendCliDrop()
 		end
 	end))
 		:addTo(self.sceneRoomNode_)
@@ -126,7 +126,7 @@ function RoomManager:initOperBtn()
 			local chooseCards = roomInfo:getMCardChooseList()
 			if #chooseCards ~= 1 then return end
 			local cardIdx = chooseCards[1]
-			self.rummyCtrl_:sendCliDiscardCard(cardIdx)
+			self.roomCtrl_:sendCliDiscardCard(cardIdx)
 		end))
 		:addTo(self.sceneRoomNode_)
 		:pos(P2[2].x, P2[2].y)
@@ -136,7 +136,7 @@ function RoomManager:initOperBtn()
 
 	self.groupBtn = g.myUi.ScaleButton.new({normal = commonRoomResDir .. "oper_yellow_btn.png"})
 		:setButtonLabel(display.newTTFLabel({size = 30, text = "Group"}), cc.p(0, 4))
-		:onClick(self.rummyCtrl_.vggGroupCards)
+		:onClick(self.roomCtrl_.vggGroupCards)
 		:addTo(self.sceneRoomNode_)
 		:pos(P2[2].x, P2[2].y)
 		:hide()
@@ -145,7 +145,7 @@ function RoomManager:initOperBtn()
 
 	self.sortBtn = g.myUi.ScaleButton.new({normal = commonRoomResDir .. "oper_yellow_btn.png"})
 		:setButtonLabel(display.newTTFLabel({size = 30, text = "Sort"}), cc.p(0, 4))
-		:onClick(self.rummyCtrl_.vggSortCards)
+		:onClick(self.roomCtrl_.vggSortCards)
 		:addTo(self.sceneRoomNode_)
 		:pos(P2[2].x,P2[2].y)
 		:hide()
@@ -173,7 +173,7 @@ function RoomManager:onSelfTurn() -- Svr返回自己操作
 	self:updateDropBtn()
 	-- 检查predrop
 	if self.dropWhenTurn then -- 自动弃整副牌
-		self.rummyCtrl_:sendCliDrop()
+		self.roomCtrl_:sendCliDrop()
 	end
 end
 
@@ -301,7 +301,7 @@ function RoomManager:onFinishBtnClick()
 			local chooseCards = roomInfo:getMCardChooseList()
 			if #chooseCards ~= 1 then return end
 			local cardIdx = chooseCards[1]
-			self.rummyCtrl_:sendCliFinish(cardIdx)
+			self.roomCtrl_:sendCliFinish(cardIdx)
 		end),	
 	}):show()
 end
@@ -336,7 +336,7 @@ end
 function RoomManager:updateDSeat(dSeatId, needAnim)
 	roomInfo:setDSeatId(dSeatId or -1)
 	if dSeatId >= 0 then
-		local fixSeatId = RummyUtil.getFixSeatId(dSeatId)
+		local fixSeatId = RoomUtil.getFixSeatId(dSeatId)
 		if fixSeatId >= 0 then
 			self:showDIcon(fixSeatId, needAnim)
 		end
@@ -443,7 +443,7 @@ function RoomManager:showDeclareTips(str, sec)
 
 	g.myUi.ScaleButton.new({normal = commonRoomResDir .. "oper_green_btn_2.png"})
 		:setButtonLabel(display.newTTFLabel({size = 30, text = "Declare"}), cc.p(0, 4))
-		:onClick(self.rummyCtrl_.sendCliDeclare)
+		:onClick(self.roomCtrl_.sendCliDeclare)
 		:addTo(self.declareBg)
 		:pos(self.declareBg:getContentSize().width - 70, self.declareBg:getContentSize().height/2 - 1)
 		:setSwallowTouches(false)

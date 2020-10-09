@@ -1,8 +1,8 @@
 local SeatManager = class("SeatManager")
 
 local CmdDef = require("app.core.protocol.CommandDef")
-local RummyConst = require("app.model.rummy.RummyConst")
-local RummyUtil = require("app.model.rummy.RummyUtil")
+local RoomConst = require("app.model.rummy.RoomConst")
+local RoomUtil = require("app.model.rummy.RoomUtil")
 local SeatView = require("app.view.rummy.SeatView")
 local roomInfo = require("app.model.rummy.RoomInfo").getInstance()
 
@@ -32,14 +32,14 @@ end
 function SeatManager:initialize()
 end
 
-function SeatManager:setRummyCtrl(rummyCtrl)
-	self.rummyCtrl_ = rummyCtrl
+function SeatManager:setRoomCtrl(roomCtrl)
+	self.roomCtrl_ = roomCtrl
 end
 
 function SeatManager:initSeatNode(sceneSeatNode)
     self.sceneSeatNode_ = sceneSeatNode
     -- seats
-	for i = 0, RummyConst.UserNum - 1 do
+	for i = 0, RoomConst.UserNum - 1 do
         self.seats_[i] = SeatView.new(i):pos(P1[i].x,P1[i].y):addTo(self.sceneSeatNode_):hide()
 	end
 end
@@ -71,10 +71,10 @@ end
 function SeatManager:initPlayerView(pack)
     local seatOffset = 0
     for _, v in ipairs(self.playerInfo) do
-         if v.seatId >= 0 and v.seatId <= RummyConst.UserNum - 1 then
+         if v.seatId >= 0 and v.seatId <= RoomConst.UserNum - 1 then
               self:initPlayerViewWithSeatId(v)
               local fromSeatId = v.seatId
-              local toSeatId = RummyUtil.getFixSeatId(v.seatId) 
+              local toSeatId = RoomUtil.getFixSeatId(v.seatId) 
               seatOffset = toSeatId - fromSeatId
          end
     end
@@ -93,14 +93,14 @@ function SeatManager:initPlayerViewWithSeatId(user)
 		seat:setUid(user.uid or -1)
 		seat:setServerSeatId(seatId)
         seat:updateSeatConfig()
-        -- seat:setUState(user.state or RummyConst.USER_SEAT)
+        -- seat:setUState(user.state or RoomConst.USER_SEAT)
         self:updateMoney(seatId, user.carry or user.money or 0)
 		self:updateUserinfo(seat, json.decode(user.userinfo))
     end
 end
 
 function SeatManager:gameStart(pack, animFinishCb)
-    self:changeUserState(RummyConst.USER_PLAY) --游戏开始所有坐下玩家置为在玩状态
+    self:changeUserState(RoomConst.USER_PLAY) --游戏开始所有坐下玩家置为在玩状态
     self:chooseDealerAnim(pack, animFinishCb)
 end
 
@@ -121,7 +121,7 @@ function SeatManager:chooseDealerAnim(pack, finishCallback)
     end
     idleSpritesNode:stopAllActions()
     idleSpritesNode:runAction(cc.Sequence:create({
-        cc.ScaleTo:create(0.2, 1 * RummyConst.toSFactor)
+        cc.ScaleTo:create(0.2, 1 * RoomConst.toSFactor)
     }))
 
     for i = 1, #refinedPlayers do
@@ -134,7 +134,7 @@ function SeatManager:chooseDealerAnim(pack, finishCallback)
             cardSprite:showBack()
             cardSprite:stopAllActions()
             cardSprite:runAction(cc.Sequence:create({
-                cc.ScaleTo:create(0.2, 1 * RummyConst.toSFactor),
+                cc.ScaleTo:create(0.2, 1 * RoomConst.toSFactor),
                 cc.DelayTime:create(i * 0.2),
                 cc.Spawn:create({cc.MoveTo:create(0.18, P2[fixSeatId]), cc.RotateTo:create(0.18, 0)}),
                 cc.DelayTime:create(dealCardTime - i * 0.2),
@@ -152,7 +152,7 @@ function SeatManager:chooseDealerAnim(pack, finishCallback)
                 cc.CallFunc:create(function()
                     if refinedPlayers[i].isScaleCardAnim then
                         cardSprite:runAction(cc.Sequence:create({
-                            cc.ScaleTo:create(0.2, 1.2 * RummyConst.toSFactor), cc.ScaleTo:create(0.2, 1.1 * RummyConst.toSFactor), cc.ScaleTo:create(0.2, 1.2 * RummyConst.toSFactor), cc.ScaleTo:create(0.2, 1.1 * RummyConst.toSFactor),
+                            cc.ScaleTo:create(0.2, 1.2 * RoomConst.toSFactor), cc.ScaleTo:create(0.2, 1.1 * RoomConst.toSFactor), cc.ScaleTo:create(0.2, 1.2 * RoomConst.toSFactor), cc.ScaleTo:create(0.2, 1.1 * RoomConst.toSFactor),
                         }))
                     end
                 end),
@@ -177,7 +177,7 @@ function SeatManager:getChooseDealerFixedPlayers(users, dealerUid)
     local isSelfInPlay = false
     for i = 1, #refinedPlayers do
         local seatId = self:querySeatIdByUid(refinedPlayers[i].uid or -1)
-        refinedPlayers[i].fixSeatId = RummyUtil.getFixSeatId(seatId)
+        refinedPlayers[i].fixSeatId = RoomUtil.getFixSeatId(seatId)
 
         if tonumber(refinedPlayers[i].uid) == tonumber(g.user:getUid()) then
             isSelfInPlay = true
@@ -262,7 +262,7 @@ function SeatManager:initInfoCardsNode(dropCard, needAnim)
     display.newSprite(mResDir .. "slot_bg.png"):pos(oldHeapPos.x, oldHeapPos.y):addTo(iNode)
     display.newTTFLabel({text = g.lang:getText("RUMMY", "OPEN_DECK"), size = 18})
         :pos(oldHeapPos.x, oldHeapPos.y):addTo(iNode)
-    local dCard = g.myUi.PokerCard.new():setTag(TAG_DISCARD_CARD):scale(RummyConst.toSFactor)
+    local dCard = g.myUi.PokerCard.new():setTag(TAG_DISCARD_CARD):scale(RoomConst.toSFactor)
         :pos(oldHeapPos.x, oldHeapPos.y):addTo(iNode):showFront()
     self:updateSlotCard(TAG_DISCARD_CARD, dropCard)
     -- 旧牌堆提示光
@@ -275,7 +275,7 @@ function SeatManager:initInfoCardsNode(dropCard, needAnim)
     display.newSprite(mResDir .. "slot_bg.png"):pos(slotPos.x, slotPos.y):addTo(iNode)
     display.newTTFLabel({text = g.lang:getText("RUMMY", "FINISH_SLOT"), size = 18})
         :pos(slotPos.x, slotPos.y):addTo(iNode)
-    g.myUi.PokerCard.new():setTag(TAG_FINISH_CARD):scale(RummyConst.toSFactor)
+    g.myUi.PokerCard.new():setTag(TAG_FINISH_CARD):scale(RoomConst.toSFactor)
         :pos(slotPos.x, slotPos.y):addTo(iNode):hide()
     -- Finish牌堆提示光
     display.newSprite(mResDir .. "area_light.png"):setTag(TAG_FINISH_AREA)
@@ -297,7 +297,7 @@ function SeatManager:initInfoCardsNode(dropCard, needAnim)
     end
     self.newHeapNode:stopAllActions()
     self.newHeapNode:runAction(cc.Sequence:create({
-        cc.ScaleTo:create(0.2, RummyConst.toSFactor),
+        cc.ScaleTo:create(0.2, RoomConst.toSFactor),
         cc.FadeIn:create(0.2),
     }))
 end
@@ -317,7 +317,7 @@ function SeatManager:updateSlotCard(slotTag, cardUint, isShowCardBack)
     local card = self.infoCardsNode:getChildByTag(slotTag)
     if  tonumber(cardUint) > 0 then
         card:setCard(cardUint)
-        card:setMagicVisible(RummyUtil.isMagicCard(cardUint))
+        card:setMagicVisible(RoomUtil.isMagicCard(cardUint))
         card:show()
         card:showFront()
         if isShowCardBack then
@@ -375,14 +375,14 @@ function SeatManager:dealCardsAnim(needAnim, finishCallback)
     end
     local newHeapPos = RVP.NewHeapPos
     local mCardCenter = RVP.MCardCenter
-    local rPosXList = RummyUtil.getRelativePosXList(roomInfo:getCurGroups())
+    local rPosXList = RoomUtil.getRelativePosXList(roomInfo:getCurGroups())
     local leftX = mCardCenter.x - (rPosXList[#rPosXList] - rPosXList[1])/2
     
     for i = 1, #cards do
         local mCard = g.myUi.PokerCard.new():setCard(cards[i]):setTag(i)
-            :pos(newHeapPos.x, newHeapPos.y):addTo(self.mCardsNode, i):opacity(0):scale(RummyConst.toSFactor)
+            :pos(newHeapPos.x, newHeapPos.y):addTo(self.mCardsNode, i):opacity(0):scale(RoomConst.toSFactor)
         mCard:showBack()
-        mCard:setMagicVisible(RummyUtil.isMagicCard(cards[i]))
+        mCard:setMagicVisible(RoomUtil.isMagicCard(cards[i]))
         local callback = handler(self, function (self)
             g.event:emit(g.eventNames.RUMMY_CARD_GROUPS_CHANGE)
             if finishCallback then finishCallback() end
@@ -432,7 +432,7 @@ end
 function SeatManager:mCardDrag(cardsNode)
     local children = cardsNode:getChildren()
     local posX, posY, preX, preY
-    local cardGap = RummyUtil.getCardGap()
+    local cardGap = RoomUtil.getCardGap()
     for i, child in pairs(children) do
         child:getFrontSprite():addNodeEventListener(cc.NODE_TOUCH_EVENT, function(event)
             -- dump(event)
@@ -490,7 +490,7 @@ end
 
 function SeatManager:onCardMoveBegan(card)
     local tag = card:getTag()
-    self.operTags = RummyUtil.getArrayFormOfCurGroups()
+    self.operTags = RoomUtil.getArrayFormOfCurGroups()
     self.originConfs = {}
     self.hasLeftCard = false
     self.hasRightCard = false
@@ -516,7 +516,7 @@ function SeatManager:onCardMoveBegan(card)
 end
 
 function SeatManager:onCardMoveTrigger(moveCard, curCardPosX)
-    local cardGap = RummyUtil.getCardGap()
+    local cardGap = RoomUtil.getCardGap()
     local children = self.mCardsNode:getChildren()
     local minDistance = display.width
     self.insertIndex = -1 -- -1, unset
@@ -632,7 +632,7 @@ end
 
 function SeatManager:onDragToNewGroup(cardSprite)
     local tag = cardSprite:getTag()
-    local isOk = RummyUtil.refreshGroupsByGroup({tag})
+    local isOk = RoomUtil.refreshGroupsByGroup({tag})
     if isOk then
         local destPos = RVP.NewGroupDragPos
         cardSprite:stopAllActions()
@@ -663,14 +663,14 @@ function SeatManager:onDragToOldArea(cardSprite)
         return
     end
     roomInfo:setDragDiscard(true)
-    self.rummyCtrl_:sendCliDiscardCard(cardSprite:getTag())
+    self.roomCtrl_:sendCliDiscardCard(cardSprite:getTag())
 
     local destPos = RVP.OldHeapPos
     cardSprite:stopAllActions()
     cardSprite:runAction(cc.Sequence:create({
         cc.Spawn:create({
             cc.MoveTo:create(0.2, destPos),
-            cc.ScaleTo:create(0.2, RummyConst.toSFactor)
+            cc.ScaleTo:create(0.2, RoomConst.toSFactor)
         }),
         cc.CallFunc:create(function()
             self:updateMCards(roomInfo:getCurGroups()) -- 更改后牌堆
@@ -694,7 +694,7 @@ function SeatManager:onDragToFinishArea(cardSprite)
     cardSprite:runAction(cc.Sequence:create({
         cc.Spawn:create({
             cc.MoveTo:create(0.2, destPos),
-            cc.ScaleTo:create(0.2, RummyConst.toSFactor)
+            cc.ScaleTo:create(0.2, RoomConst.toSFactor)
         }),
         cc.CallFunc:create(function()
             self:showFinishConfirmPopup(cardSprite:getTag())
@@ -708,7 +708,7 @@ function SeatManager:showFinishConfirmPopup(cardIdx)
 		text = g.lang:getText("RUMMY", "CONFIRM_FINISH_TIPS"),
         onConfirm = handler(self, function()
             roomInfo:setDragFinish(true)
-            self.rummyCtrl_:sendCliFinish(cardIdx)
+            self.roomCtrl_:sendCliFinish(cardIdx)
             self:updateMCards(roomInfo:getCurGroups()) -- 更改后牌堆
         end),
         onCancel = handler(self,self.cardsToOrigin)
@@ -722,7 +722,7 @@ end
 
 function SeatManager:onMoveCard(beginIdx, endIdx, frontBack)
     print("触发移牌事件, ", beginIdx, endIdx, frontBack)
-    local isOk = RummyUtil.refreshGroupsByMove(beginIdx, endIdx, frontBack)
+    local isOk = RoomUtil.refreshGroupsByMove(beginIdx, endIdx, frontBack)
         
     if isOk then
         self:updateMCards(roomInfo:getCurGroups()) -- 更改后牌堆
@@ -730,7 +730,7 @@ function SeatManager:onMoveCard(beginIdx, endIdx, frontBack)
 end
 
 function SeatManager:selfDrawCardAnim(pack, moveToTargetCb)
-    local rPosXList = RummyUtil.getRelativePosXList(roomInfo:getCurGroups())
+    local rPosXList = RoomUtil.getRelativePosXList(roomInfo:getCurGroups())
     local mCardCenter = RVP.MCardCenter
     local leftX = mCardCenter.x - (rPosXList[#rPosXList] - rPosXList[1])/2
     local targetPos = cc.p(leftX + rPosXList[#rPosXList], mCardCenter.y)
@@ -760,7 +760,7 @@ function SeatManager:selfDrawCardAnim(pack, moveToTargetCb)
         local card = g.myUi.PokerCard.new():setCard(pack.card):pos(oldHeapPos.x, oldHeapPos.y):addTo(self.sceneAnimNode_)
         card:showFront()
         self:updateSlotCard(TAG_DISCARD_CARD, pack.dropCard)
-        card:setMagicVisible(RummyUtil.isMagicCard(pack.card))
+        card:setMagicVisible(RoomUtil.isMagicCard(pack.card))
         card:stopAllActions()
         card:runAction(cc.Sequence:create({
             cc.Spawn:create({
@@ -796,7 +796,7 @@ function SeatManager:selfDiscardCardAnim(dropCard, cardIdx, finishCallback)
     card:runAction(cc.Sequence:create({
         cc.Spawn:create({
             cc.MoveTo:create(0.4, oldHeapPos),
-            cc.ScaleTo:create(0.4, RummyConst.toSFactor),
+            cc.ScaleTo:create(0.4, RoomConst.toSFactor),
             cc.FadeOut:create(0.4),
         }),
         cc.CallFunc:create(function()
@@ -806,8 +806,8 @@ function SeatManager:selfDiscardCardAnim(dropCard, cardIdx, finishCallback)
         end),
     }))
 
-    if cardIdx ~= RummyConst.DRAW_CARD_ID then -- 弃牌不是摸牌, 需要将摸牌和弃牌的cardTag对调
-        local child = self.mCardsNode:getChildByTag(RummyConst.DRAW_CARD_ID)
+    if cardIdx ~= RoomConst.DRAW_CARD_ID then -- 弃牌不是摸牌, 需要将摸牌和弃牌的cardTag对调
+        local child = self.mCardsNode:getChildByTag(RoomConst.DRAW_CARD_ID)
         if g.myFunc:checkNodeExist(child) then child:setTag(cardIdx) end
     end
 end
@@ -825,7 +825,7 @@ function SeatManager:selfFinishCardAnim(finishCard, cardIdx, finishCallback)
     card:runAction(cc.Sequence:create({
         cc.Spawn:create({
             cc.MoveTo:create(0.4, destPos),
-            cc.ScaleTo:create(0.4, RummyConst.toSFactor),
+            cc.ScaleTo:create(0.4, RoomConst.toSFactor),
             cc.FadeOut:create(0.4),
         }),
         cc.CallFunc:create(function()
@@ -834,8 +834,8 @@ function SeatManager:selfFinishCardAnim(finishCard, cardIdx, finishCallback)
             if finishCallback then finishCallback() end
         end),
     }))
-    if cardIdx ~= RummyConst.DRAW_CARD_ID then -- finish牌不是摸牌, 需要将摸牌和弃牌的cardTag对调
-        local child = self.mCardsNode:getChildByTag(RummyConst.DRAW_CARD_ID)
+    if cardIdx ~= RoomConst.DRAW_CARD_ID then -- finish牌不是摸牌, 需要将摸牌和弃牌的cardTag对调
+        local child = self.mCardsNode:getChildByTag(RoomConst.DRAW_CARD_ID)
         if g.myFunc:checkNodeExist(child) then child:setTag(cardIdx) end
     end
 end
@@ -854,17 +854,17 @@ end
 function SeatManager:otherDrawCardAnim(pack)
     if not g.myFunc:checkNodeExist(self.infoCardsNode) then return end
     local seatId = self:querySeatIdByUid(pack.uid)
-    local fixSeatId = RummyUtil.getFixSeatId(seatId)
+    local fixSeatId = RoomUtil.getFixSeatId(seatId)
     if fixSeatId < 0 then return end
     if tonumber(pack.region) == 0 then -- 新牌堆
         local newHeapPos = RVP.NewHeapPos
-        local card = g.myUi.PokerCard.new():pos(newHeapPos.x, newHeapPos.y):addTo(self.sceneAnimNode_):scale(RummyConst.toSFactor)
+        local card = g.myUi.PokerCard.new():pos(newHeapPos.x, newHeapPos.y):addTo(self.sceneAnimNode_):scale(RoomConst.toSFactor)
         card:showBack()
         card:stopAllActions()
         card:runAction(cc.Sequence:create({
             cc.Spawn:create({
                 cc.MoveTo:create(0.6, P1[fixSeatId]),
-                cc.ScaleTo:create(0.6, RummyConst.toSFactor * 0.8),
+                cc.ScaleTo:create(0.6, RoomConst.toSFactor * 0.8),
                 cc.FadeOut:create(0.6),
             }),
             cc.CallFunc:create(function()
@@ -875,16 +875,16 @@ function SeatManager:otherDrawCardAnim(pack)
         local dropCard = self.infoCardsNode:getChildByTag(TAG_DISCARD_CARD)
         local oldHeapPos = RVP.OldHeapPos
         local oldCardUint = dropCard:getCard()
-        local card = g.myUi.PokerCard.new():setCard(oldCardUint):scale(RummyConst.toSFactor)
+        local card = g.myUi.PokerCard.new():setCard(oldCardUint):scale(RoomConst.toSFactor)
             :pos(oldHeapPos.x, oldHeapPos.y):addTo(self.sceneAnimNode_)
         card:showFront()
-        card:setMagicVisible(RummyUtil.isMagicCard(oldCardUint))
+        card:setMagicVisible(RoomUtil.isMagicCard(oldCardUint))
         self:updateSlotCard(TAG_DISCARD_CARD, pack.dropCard)
         card:stopAllActions()
         card:runAction(cc.Sequence:create({
             cc.Spawn:create({
                 cc.MoveTo:create(0.6, P1[fixSeatId]),
-                cc.ScaleTo:create(0.6, RummyConst.toSFactor * 0.8),
+                cc.ScaleTo:create(0.6, RoomConst.toSFactor * 0.8),
                 cc.FadeOut:create(0.6),
             }),
             cc.CallFunc:create(function()
@@ -897,17 +897,17 @@ end
 function SeatManager:otherDiscardCardAnim(pack)
     if not g.myFunc:checkNodeExist(self.infoCardsNode) then return end
     local seatId = self:querySeatIdByUid(pack.uid)
-    local fixSeatId = RummyUtil.getFixSeatId(seatId)
+    local fixSeatId = RoomUtil.getFixSeatId(seatId)
     if fixSeatId < 0 then return end
     
     local oldHeapPos = RVP.OldHeapPos
-    local card = g.myUi.PokerCard.new():setCard(pack.dropCard):scale(RummyConst.toSFactor * 0.6)
+    local card = g.myUi.PokerCard.new():setCard(pack.dropCard):scale(RoomConst.toSFactor * 0.6)
         :pos(P1[fixSeatId].x, P1[fixSeatId].y):addTo(self.infoCardsNode)
     card:showFront()
     card:stopAllActions()
     card:runAction(cc.Sequence:create({
         cc.Spawn:create({
-            cc.ScaleTo:create(0.4, RummyConst.toSFactor * 1),
+            cc.ScaleTo:create(0.4, RoomConst.toSFactor * 1),
             cc.FadeIn:create(0.4),
         }),
         cc.Spawn:create({
@@ -924,17 +924,17 @@ end
 function SeatManager:otherFinishCardAnim(pack)
     if not g.myFunc:checkNodeExist(self.infoCardsNode) then return end
     local seatId = self:querySeatIdByUid(pack.uid)
-    local fixSeatId = RummyUtil.getFixSeatId(seatId)
+    local fixSeatId = RoomUtil.getFixSeatId(seatId)
     if fixSeatId < 0 then return end
     local destPos = RVP.FinishSlotPos
-    local card = g.myUi.PokerCard.new():setCard(pack.card):scale(RummyConst.toSFactor * 0.6)
+    local card = g.myUi.PokerCard.new():setCard(pack.card):scale(RoomConst.toSFactor * 0.6)
         :pos(P1[fixSeatId].x, P1[fixSeatId].y):addTo(self.infoCardsNode)
     card:showFront()
     card:showBack()
     card:stopAllActions()
     card:runAction(cc.Sequence:create({
         cc.Spawn:create({
-            cc.ScaleTo:create(0.4, RummyConst.toSFactor * 1),
+            cc.ScaleTo:create(0.4, RoomConst.toSFactor * 1),
             cc.FadeIn:create(0.4),
         }),
         cc.Spawn:create({
@@ -974,7 +974,7 @@ function SeatManager:updateMCards(groups, noUpload)
 
     g.myFunc:safeRemoveNode(self.mCardsNode)
     self.mCardsNode = display.newNode():addTo(self.sceneAnimNode_)
-    local rPosXList = RummyUtil.getRelativePosXList(groups)
+    local rPosXList = RoomUtil.getRelativePosXList(groups)
     local mCards = roomInfo:getMCards()
     
     local mCardCenter = RVP.MCardCenter
@@ -989,8 +989,8 @@ function SeatManager:updateMCards(groups, noUpload)
                 :pos(leftX + rPosXList[curIndex], mCardCenter.y):addTo(self.mCardsNode)
                 :setLocalZOrder(curIndex)
             mCard:showFront()
-            mCard:setMagicVisible(RummyUtil.isMagicCard(mCards[idx]))
-            if idx == RummyConst.DRAW_CARD_ID then newDrawCardPos = curIndex end
+            mCard:setMagicVisible(RoomUtil.isMagicCard(mCards[idx]))
+            if idx == RoomConst.DRAW_CARD_ID then newDrawCardPos = curIndex end
         end
     end
     self:mCardDrag(self.mCardsNode)
@@ -1005,8 +1005,8 @@ function SeatManager:updateMGroupInfo(groups, firstCardPosX, lastCardPosX)
     g.myFunc:safeRemoveNode(self.mGroupInfoNode)
     self.mGroupInfoNode = display.newNode():addTo(self.sceneAnimNode_)
     local mGroupInfoCenter = RVP.MGroupInfoCenter
-    local confiPosXList = RummyUtil.getGroupTipRelativePosXList(groups)
-    local confs = RummyUtil.getGroupConfs(groups)
+    local confiPosXList = RoomUtil.getGroupTipRelativePosXList(groups)
+    local confs = RoomUtil.getGroupConfs(groups)
     -- dump(confiPosXList, "confiPosXList")
     local leftX = mGroupInfoCenter.x - (lastCardPosX - firstCardPosX)/2
     for i, group in pairs(groups) do
@@ -1020,15 +1020,15 @@ function SeatManager:renderGroupInfoNode(conf, node)
     if conf.isValid then -- 符合条件group组
         local icon = display.newSprite(mResDir .. "check_ok.png"):addTo(node)
         local lbl = display.newTTFLabel({size = 18}):addTo(node)
-        if conf.cardType == RummyConst.STRAIGHT_FLUSH then
+        if conf.cardType == RoomConst.STRAIGHT_FLUSH then
             lbl:setString(g.lang:getText("RUMMY", "STRAIGHT_FLUSH"))
-        elseif conf.cardType == RummyConst.STRAIGHT then
+        elseif conf.cardType == RoomConst.STRAIGHT then
             lbl:setString(g.lang:getText("RUMMY", "STRAIGHT"))
-        elseif conf.cardType == RummyConst.SANGONG then
+        elseif conf.cardType == RoomConst.SANGONG then
             lbl:setString(g.lang:getText("RUMMY", "SANGONG"))
         end
         g.myFunc:setNodesAlignCenter({icon, lbl}, 4)
-    elseif conf.cardType == RummyConst.OTHERS then -- 非法, 且不是条或顺子
+    elseif conf.cardType == RoomConst.OTHERS then -- 非法, 且不是条或顺子
         if conf.cardNum >= 2 and conf.point <= 0 then -- 大于等于两张牌, 点数为0
             local icon = display.newSprite(mResDir .. "check_ok.png"):addTo(node)
         elseif conf.cardNum >= 2 then -- 大于等于两张牌, 点数大于0
@@ -1041,11 +1041,11 @@ function SeatManager:renderGroupInfoNode(conf, node)
         end
     else -- 非法, 条或顺子
         local str = ""
-        if conf.cardType == RummyConst.STRAIGHT_FLUSH then
+        if conf.cardType == RoomConst.STRAIGHT_FLUSH then
             str = str .. g.lang:getText("RUMMY", "STRAIGHT_FLUSH")
-        elseif conf.cardType == RummyConst.STRAIGHT then
+        elseif conf.cardType == RoomConst.STRAIGHT then
             str = str .. g.lang:getText("RUMMY", "STRAIGHT")
-        elseif conf.cardType == RummyConst.SANGONG then
+        elseif conf.cardType == RoomConst.SANGONG then
             str = str .. g.lang:getText("RUMMY", "SANGONG")
         end
         str = str .. " (" .. conf.point .. ")"
@@ -1054,7 +1054,7 @@ function SeatManager:renderGroupInfoNode(conf, node)
 end
 
 function SeatManager:uploadGroups(groups, newDrawCardPos)
-    if RummyUtil.isGroupsEqual(groups, roomInfo:getLastReportGroups()) then
+    if RoomUtil.isGroupsEqual(groups, roomInfo:getLastReportGroups()) then
         print("groups equal to last reported groups")
         return
     end
@@ -1128,10 +1128,10 @@ end
 function SeatManager:changeUserState(uState)
     for _, v in ipairs(self.playerInfo) do
             v.state = uState
-            if v.seatId >= 0 and v.seatId <= RummyConst.UserNum - 1 then
+            if v.seatId >= 0 and v.seatId <= RoomConst.UserNum - 1 then
                 local seat = self.seats_[v.seatId]
                 seat:setUState(uState)
-                if uState == RummyConst.USER_PLAY then
+                if uState == RoomConst.USER_PLAY then
                     seat:setHeadBright()
                 end
             end
@@ -1155,16 +1155,16 @@ function SeatManager:updateUserinfo(seat, userinfo)
 end
 
 function SeatManager:startAllSeatMove(seatOffset, isInstant)
-	for i = 0, RummyConst.UserNum - 1 do
+	for i = 0, RoomConst.UserNum - 1 do
 		local seat = self.seats_[i]
         local fromSeatId = seat:getServerSeatId()
-        if fromSeatId ~= RummyConst.NoPlayerSeatId then
+        if fromSeatId ~= RoomConst.NoPlayerSeatId then
 			seat:show()
 			local toSeatId = fromSeatId + seatOffset
 			if toSeatId < 0 then
-				toSeatId = toSeatId + RummyConst.UserNum
-			elseif toSeatId > RummyConst.UserNum - 1 then
-				toSeatId = toSeatId - RummyConst.UserNum
+				toSeatId = toSeatId + RoomConst.UserNum
+			elseif toSeatId > RoomConst.UserNum - 1 then
+				toSeatId = toSeatId - RoomConst.UserNum
 			end
 			self:startSeatMove(seat, fromSeatId, toSeatId)
 		else
@@ -1182,7 +1182,7 @@ function SeatManager:startSeatMove(seat, fromSeatId, toSeatId)
 end
 
 function SeatManager:startMoveToNotFix()
-    for i = 0, RummyConst.UserNum-1 do
+    for i = 0, RoomConst.UserNum-1 do
         local seat = self.seats_[i]
         seat:updateSeatConfig()
         self:startMoveSeatAnimation(seat, seat:getNowPos(), i)
@@ -1205,11 +1205,11 @@ local moveActions = {}
 end
 
 function SeatManager:castUserSit(pack)
-    if pack.seatId >= 0 and pack.seatId <= RummyConst.UserNum - 1 then
+    if pack.seatId >= 0 and pack.seatId <= RoomConst.UserNum - 1 then
         local user = self:insertUser(pack)
         self:initPlayerViewWithSeatId(user)  
         local seat = self:getSeatByUid(user.uid)
-        local toSeatId = RummyUtil.getFixSeatId(pack.seatId or -1)
+        local toSeatId = RoomUtil.getFixSeatId(pack.seatId or -1)
         seat:show()
         self:startSeatMove(seat, user.seatId, toSeatId)
     end
@@ -1236,7 +1236,7 @@ function SeatManager:standUp(uid)
 end
 
 function SeatManager:getSeatByUid(uid)
-	for i = 0, RummyConst.UserNum - 1 do
+	for i = 0, RoomConst.UserNum - 1 do
 		local seat = self.seats_[i]
 		if seat:getUid() == uid then
 			return seat
@@ -1245,7 +1245,7 @@ function SeatManager:getSeatByUid(uid)
 end
 
 function SeatManager:getSeatByServerSeatId(serverSeatId)
-	for i = 0, RummyConst.UserNum - 1 do
+	for i = 0, RoomConst.UserNum - 1 do
 		local seat = self.seats_[i]
 		if seat:getServerSeatId() == serverSeatId then
 			return seat
@@ -1280,7 +1280,7 @@ function SeatManager:insertUser(pack)
     user.uid = pack.uid or -1
     user.seatId = pack.seatId or -1
     user.userinfo = pack.userinfo or ""
-    user.state = pack.state or RummyConst.USER_USER_SEAT
+    user.state = pack.state or RoomConst.USER_USER_SEAT
     user.money = pack.money or 0
     user.gold = pack.gold or 0
     table.insert(self.playerInfo, user)
@@ -1352,7 +1352,7 @@ function SeatManager:clearAll()
 end
 
 function SeatManager:clearTable()
-    for i = 0, RummyConst.UserNum - 1 do
+    for i = 0, RoomConst.UserNum - 1 do
         self.seats_[i]:clearTable()
     end
     self:clearMCardsArea()

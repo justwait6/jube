@@ -3,7 +3,7 @@ local SeatView = class("SeatView", function ()
 end)
 
 local SeatCtrl = require("app.controller.rummy.SeatCtrl")
-local RummyConst = require("app.model.rummy.RummyConst")
+local RoomConst = require("app.model.rummy.RoomConst")
 local roomInfo = require("app.model.rummy.RoomInfo").getInstance()
 local mResDir = "image/rummy/seat/" -- module resource directory
 
@@ -106,7 +106,7 @@ function SeatView:setServerSeatId(seatId)
 end
 
 function SeatView:getServerSeatId()
-	return self.svrSeatId or RummyConst.NoPlayerSeatId
+	return self.svrSeatId or RoomConst.NoPlayerSeatId
 end
 
 function SeatView:updateMoney(money)
@@ -179,7 +179,7 @@ function SeatView:updateHeader(tex, loadIndex)
         self.headCircleLight2:setScale(self.headCircleLightScale * 0.92)
         self.headCircleLight1:setScale(self.headCircleLightScale * 0.8)
         if self.uid and self.uid > 0 then 
-            if self.uState ==  RummyConst.USER_PLAY then
+            if self.uState ==  RoomConst.USER_PLAY then
                 self:setHeadBright()
             else
                 self:setHeadDark()
@@ -260,10 +260,10 @@ end
 function SeatView:setUState(uState)
     self.uState = uState
     if self.serverSeatId == roomInfo:getMSeatId() then
-           if uState == RummyConst.USER_PLAY then
-                 RummyConst.isMeInGames = true
+           if uState == RoomConst.USER_PLAY then
+                 RoomConst.isMeInGames = true
            else
-                 RummyConst.isMeInGames = false
+                 RoomConst.isMeInGames = false
            end
     end
 end
@@ -299,7 +299,7 @@ function SeatView:standUp()
     end
     self:setUid(-1)
 	self:clearTable()
-	self:setServerSeatId(RummyConst.NoPlayerSeatId)
+	self:setServerSeatId(RoomConst.NoPlayerSeatId)
     self:updateSeatConfig()
     -- self:stopCountDown()
 end

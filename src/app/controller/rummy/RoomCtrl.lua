@@ -1,18 +1,18 @@
-local RummyCtrl = class("RummyCtrl")
+local RoomCtrl = class("RoomCtrl")
 
 local CmdDef = require("app.core.protocol.CommandDef")
 local roomMgr = require("app.model.rummy.RoomManager").getInstance()
 local seatMgr = require("app.model.rummy.SeatManager").getInstance()
-local RummyConst = require("app.model.rummy.RummyConst")
+local RoomConst = require("app.model.rummy.RoomConst")
 local roomInfo = require("app.model.rummy.RoomInfo").getInstance()
-local RummyUtil = require("app.model.rummy.RummyUtil")
+local RoomUtil = require("app.model.rummy.RoomUtil")
 
 local DropCardsView = require("app.view.rummy.DropCardsView")
 local ScoreView = require("app.view.rummy.ScoreView")
 
 local PACKET_PROC_FRAME_INTERVAL = 2
 
-function RummyCtrl:ctor()
+function RoomCtrl:ctor()
 	self.packetCache_ = {}
 	self.frameNo_ = 1
 	self:initialize()
@@ -25,32 +25,32 @@ function RummyCtrl:ctor()
   end, 1 / 60)
 end
 
-function RummyCtrl:initialize()
+function RoomCtrl:initialize()
 end
 
-function RummyCtrl:addEventListeners()
+function RoomCtrl:addEventListeners()
 	g.event:on(g.eventNames.PACKET_RECEIVED, handler(self, self.onPackReceived_), self)
 end
 
-function RummyCtrl:initSeatNode(sceneSeatNode)
-	seatMgr:setRummyCtrl(self)
+function RoomCtrl:initSeatNode(sceneSeatNode)
+	seatMgr:setRoomCtrl(self)
 	seatMgr:initSeatNode(sceneSeatNode)
 end
 
-function RummyCtrl:initRoomNode(sceneRoomNode)
-	roomMgr:setRummyCtrl(self)
+function RoomCtrl:initRoomNode(sceneRoomNode)
+	roomMgr:setRoomCtrl(self)
 	roomMgr:initRoomNode(sceneRoomNode)
 end
 
-function RummyCtrl:initAnimNode(sceneAnimNode)
+function RoomCtrl:initAnimNode(sceneAnimNode)
 	seatMgr:initAnimNode(sceneAnimNode)
 end
 
-function RummyCtrl:onPackReceived_(packet)
+function RoomCtrl:onPackReceived_(packet)
 	table.insert(self.packetCache_, packet)
 end
 
-function RummyCtrl:onEnterFrame_()
+function RoomCtrl:onEnterFrame_()
 	if #self.packetCache_ > 0 then		
 		if #self.packetCache_ == 1 then
             self.frameNo_ = 1
@@ -97,7 +97,7 @@ function RummyCtrl:onEnterFrame_()
     return true
 end
 
-function RummyCtrl:processPacket_(pack)
+function RoomCtrl:processPacket_(pack)
 	local cmd = pack.cmd
 	if cmd == CmdDef.SVR_ENTER_ROOM then
 		self:enterRoom(pack)
@@ -144,7 +144,7 @@ function RummyCtrl:processPacket_(pack)
 	end
 end
 
-function RummyCtrl:enterRoom(pack)
+function RoomCtrl:enterRoom(pack)
 	if pack.ret == 0 then
 		g.Var.level = tonumber(pack.level)
 		pack.mPlayer = self:mPlayerLoginInfo(pack.players, pack.users)
@@ -157,11 +157,11 @@ function RummyCtrl:enterRoom(pack)
 			seatMgr:inGameReconnectInfo(pack)
 			print("enterRoom: isSelfInGame", self:isSelfInGame(pack.users))
 			if self:isSelfInGame(pack.users) then -- 自己正在玩
-				pack.cards = RummyUtil.calcMCardsByReconnect(pack.groups, pack.drawCardPos)
+				pack.cards = RoomUtil.calcMCardsByReconnect(pack.groups, pack.drawCardPos)
 				roomInfo:setMCards(pack.cards)
 				roomMgr:selfInGameReconnectInfo(pack)
 				seatMgr:selfInGameReconnectInfo(pack)
-				local isOk = RummyUtil.refreshGroupsByReconnect(pack.groups, pack.drawCardPos)
+				local isOk = RoomUtil.refreshGroupsByReconnect(pack.groups, pack.drawCardPos)
 				print("enterRoom: refreshGroupsByReconnect", isOk)
 				if isOk then
 					seatMgr:updateMCards(roomInfo:getCurGroups(), true)
@@ -199,7 +199,7 @@ function RummyCtrl:enterRoom(pack)
 	end
 end
 
-function RummyCtrl:isSelfInGame(curPlayers)
+function RoomCtrl:isSelfInGame(curPlayers)
 	if type(curPlayers) ~= "table" or (#curPlayers) <= 0 then return end
 	for i = 1, #curPlayers do
         if tonumber(curPlayers[i].uid) == tonumber(g.user:getUid()) and tonumber(curPlayers[i].isDrop) ~= 1 then -- 在玩, 没有弃牌
@@ -209,7 +209,7 @@ function RummyCtrl:isSelfInGame(curPlayers)
 	return false
 end
 
-function RummyCtrl:mPlayerLoginInfo(players, users)
+function RoomCtrl:mPlayerLoginInfo(players, users)
 	local mPlayer = {}
 	if type(players) == "table" and (#players) > 0 then
 		for i = 1, #players do
@@ -234,14 +234,14 @@ function RummyCtrl:mPlayerLoginInfo(players, users)
 	return mPlayer
 end
 
-function RummyCtrl:gameStartCountDown(pack)
+function RoomCtrl:gameStartCountDown(pack)
 	if not pack then return end
 	roomMgr:clearTable()
 	seatMgr:clearTable()
 	roomMgr:countDownTips(pack.leftSec)
 end
 
-function RummyCtrl:gameStart(pack)
+function RoomCtrl:gameStart(pack)
 	if not pack then return end
 	pack.dSeatId = seatMgr:querySeatIdByUid(pack.dUid)
 	roomInfo:setDSeatId(pack.dSeatId or -1)
@@ -252,7 +252,7 @@ function RummyCtrl:gameStart(pack)
 	g.windowMgr:removeWindowIfByName("ScoreView")
 end
 
-function RummyCtrl:startDealCards(pack, needAnim)
+function RoomCtrl:startDealCards(pack, needAnim)
 	if not pack then return end
 	roomInfo:setMCards(pack.cards)
 	roomInfo:setMagicCard(pack.magicCard)
@@ -262,7 +262,7 @@ function RummyCtrl:startDealCards(pack, needAnim)
 end
 
 -- 前提: 重连包, 用户在玩(桌子状态在玩)
-function RummyCtrl:simulateStartDealCards(pack)
+function RoomCtrl:simulateStartDealCards(pack)
 	if tonumber(pack.state) ~= 1 then return end
 	local simulatePack = {}
     simulatePack.magicCard = pack.magicCard
@@ -272,7 +272,7 @@ function RummyCtrl:simulateStartDealCards(pack)
     self:startDealCards(simulatePack, false)
 end
 
-function RummyCtrl:castUserTurn(pack)
+function RoomCtrl:castUserTurn(pack)
 	if not pack then return end
 	local name = seatMgr:queryUsernameByUid(pack.uid)
 	local str = string.format(g.lang:getText("RUMMY", "TURN_TO_PLAY_FMT"), (name or pack.uid))
@@ -290,7 +290,7 @@ function RummyCtrl:castUserTurn(pack)
 end
 
 -- 前提: 重连包, 用户在玩(桌子状态在玩)
-function RummyCtrl:simulateUserTurn(pack)
+function RoomCtrl:simulateUserTurn(pack)
 	if tonumber(pack.state) ~= 1 then return end
 	local simulatePack = {}
     simulatePack.uid = pack.operUid
@@ -298,7 +298,7 @@ function RummyCtrl:simulateUserTurn(pack)
 	self:castUserTurn(simulatePack)
 end
 
-function RummyCtrl:selfDraw(pack)
+function RoomCtrl:selfDraw(pack)
     if not pack then return end
     if tonumber(pack.ret) == 0 then
         local mCards = roomInfo:getMCards()
@@ -308,7 +308,7 @@ function RummyCtrl:selfDraw(pack)
 		local name = seatMgr:queryUsernameByUid(uid)
 		roomMgr:playDrawCardTips(name, uid, pack.region)
 
-        RummyUtil.refreshGroupsByDraw(pack.card)
+        RoomUtil.refreshGroupsByDraw(pack.card)
         seatMgr:selfDrawCardAnim(pack, handler(self, function()
 			seatMgr:updateMCards(roomInfo:getCurGroups())
 			seatMgr:showAreaLightsDiscardStage() -- 摸牌后, 进入弃牌阶段
@@ -317,7 +317,7 @@ function RummyCtrl:selfDraw(pack)
     end
 end
 
-function RummyCtrl:castUserDraw(pack)        
+function RoomCtrl:castUserDraw(pack)        
 	if tonumber(pack.uid) ~= tonumber(g.user:getUid()) then
 		local name = seatMgr:queryUsernameByUid(uid)
 		roomMgr:playDrawCardTips(name, uid, pack.region)
@@ -325,22 +325,22 @@ function RummyCtrl:castUserDraw(pack)
 	end
 end
 --自己弃一张牌操作
-function RummyCtrl:selfDiscard(pack)
+function RoomCtrl:selfDiscard(pack)
 	if not pack then return end
 	if pack.ret == 0 then
 		local cardIdx = pack.index
 		if cardIdx == -1 then -- 系统帮玩家出牌(摸的那张牌, 牌id标记为14)
-			cardIdx = RummyConst.DRAW_CARD_ID
+			cardIdx = RoomConst.DRAW_CARD_ID
 		end
-		if cardIdx >= 1 and cardIdx <= RummyConst.DRAW_CARD_ID then
+		if cardIdx >= 1 and cardIdx <= RoomConst.DRAW_CARD_ID then
 			local mCards = roomInfo:getMCards()
 			table.remove(mCards, cardIdx)
-			if cardIdx ~= RummyConst.DRAW_CARD_ID then
+			if cardIdx ~= RoomConst.DRAW_CARD_ID then
 				local lastCard = table.remove(mCards)
 				table.insert(mCards, cardIdx, lastCard)
 			end
 			roomInfo:setMCards(mCards)
-			RummyUtil.refreshGroupsByDiscard(cardIdx)
+			RoomUtil.refreshGroupsByDiscard(cardIdx)
 		end
 		print("selfDiscardCard: cardIdx, pack.dropCard", cardIdx, pack.dropCard)
 		-- g.audio:playSound(g.Audio.SANGONG_FOLD)
@@ -349,7 +349,7 @@ function RummyCtrl:selfDiscard(pack)
 	end
 end
 
-function RummyCtrl:castUserDiscard(pack)
+function RoomCtrl:castUserDiscard(pack)
 	if not pack then return end
 	if tonumber(pack.uid) == tonumber(g.user:getUid()) then return end
 	seatMgr:stopCountDown(pack.uid)
@@ -357,21 +357,21 @@ function RummyCtrl:castUserDiscard(pack)
 	-- g.audio:playSound(g.Audio.SANGONG_FOLD)
 end
 
-function RummyCtrl:selfFinish(pack)
+function RoomCtrl:selfFinish(pack)
     if not pack then return end
     if pack.ret == 0 then -- 成功
         local mCards = roomInfo:getMCards()
         local cardIdx = roomInfo:getFinishCardIndex()
         local finishCard = mCards[cardIdx]
-        if cardIdx >= 1 and cardIdx <= RummyConst.DRAW_CARD_ID then
+        if cardIdx >= 1 and cardIdx <= RoomConst.DRAW_CARD_ID then
             local mCards = roomInfo:getMCards()
             table.remove(mCards, cardIdx)
-            if cardIdx ~= RummyConst.DRAW_CARD_ID then
+            if cardIdx ~= RoomConst.DRAW_CARD_ID then
                 local lastCard = table.remove(mCards)
                 table.insert(mCards, cardIdx, lastCard)
             end
             roomInfo:setMCards(mCards)
-            RummyUtil.refreshGroupsByDiscard(cardIdx)
+            RoomUtil.refreshGroupsByDiscard(cardIdx)
         end
 
         roomMgr:hideOperBtn()
@@ -387,7 +387,7 @@ function RummyCtrl:selfFinish(pack)
     end
 end
 
-function RummyCtrl:castUserFinish(pack)
+function RoomCtrl:castUserFinish(pack)
     if not pack then return end
     if tonumber(pack.uid) == tonumber(g.user:getUid()) then return end -- 如果是自己, 返回
     seatMgr:startCountDown(pack.time or 0, pack.uid)
@@ -396,7 +396,7 @@ function RummyCtrl:castUserFinish(pack)
 	-- g.audio:playSound(g.audio.SANGONG_FOLD)
 end
 
-function RummyCtrl:selfDeclare(pack)
+function RoomCtrl:selfDeclare(pack)
 	if not pack then return end
 	-- ret为0, 合法declare; ret为10, 尝试[first-valid-declare]失败; ret为11, 剩余玩家declare
     if tonumber(pack.ret) == 0 or tonumber(pack.ret) == 10 or tonumber(pack.ret) == 11 then
@@ -410,11 +410,11 @@ function RummyCtrl:selfDeclare(pack)
     end
 end
 
-function RummyCtrl:simulateSelfDeclare(pack)
+function RoomCtrl:simulateSelfDeclare(pack)
     self:selfDeclare(pack)
 end
 
-function RummyCtrl:castUserDeclare(pack)
+function RoomCtrl:castUserDeclare(pack)
     if not pack then return end
     seatMgr:stopCountDown(pack.uid)
     if pack.ret == 0 then -- declare成功
@@ -436,7 +436,7 @@ function RummyCtrl:castUserDeclare(pack)
     end
 end
 
-function RummyCtrl:simulateNotifyLeftMeDeclare(pack)
+function RoomCtrl:simulateNotifyLeftMeDeclare(pack)
     roomMgr:hideOperBtn()
     seatMgr:startCountDown(pack.time or 0, g.user:getUid())
     local str = "Please group your cards and declare."
@@ -447,7 +447,7 @@ function RummyCtrl:simulateNotifyLeftMeDeclare(pack)
     roomMgr:showDeclareTips(str, pack.time)
 end
 
-function RummyCtrl:selfDrop(pack)
+function RoomCtrl:selfDrop(pack)
     if not pack then return end
 	if tonumber(pack.ret) == 0 then -- 弃牌成功
 		pack.uid = g.user:getUid()
@@ -458,11 +458,11 @@ function RummyCtrl:selfDrop(pack)
     end
 end
 
-function RummyCtrl:simulateSelfDrop(pack)
+function RoomCtrl:simulateSelfDrop(pack)
     self:selfDrop(pack)
 end
 
-function RummyCtrl:castUserDrop(pack)
+function RoomCtrl:castUserDrop(pack)
     if not pack then return end
     seatMgr:stopCountDown(pack.uid)
     if tonumber(pack.uid) == tonumber(g.user:getUid()) then
@@ -471,11 +471,11 @@ function RummyCtrl:castUserDrop(pack)
     seatMgr:userDrop(pack)
 end
 
-function RummyCtrl:simulateCastUserDrop(pack)
+function RoomCtrl:simulateCastUserDrop(pack)
     self:castUserDrop(pack)
 end
 
-function RummyCtrl:gameEndScore(pack)
+function RoomCtrl:gameEndScore(pack)
     -- 如果自己已经declare,更新或显示declare弹框
     -- 如果自己没有declare,怎么处理?
     if not pack then return end
@@ -518,19 +518,19 @@ function RummyCtrl:gameEndScore(pack)
     end
 end
 
-function RummyCtrl:backClick()
-	if RummyConst.isMeInGames then
+function RoomCtrl:backClick()
+	if RoomConst.isMeInGames then
 		g.myUi.Dialog.new({
 			type = g.myUi.Dialog.Type.NORMAL,
 			text = g.lang:getText("RUMMY", "EXITTIPS"),
-			onConfirm = RummyCtrl.logoutRoom,	
+			onConfirm = RoomCtrl.logoutRoom,	
 		}):show()
  	else
-		RummyCtrl.logoutRoom()
+		RoomCtrl.logoutRoom()
  	end
 end
 
-function RummyCtrl:logoutRoom()
+function RoomCtrl:logoutRoom()
 	if g.mySocket:isConnected() then
 		g.mySocket:send(g.mySocket:createPacketBuilder(CmdDef.CLI_EXIT_ROOM)
 	   :setParameter("uid", tonumber(g.user:getUid()))
@@ -538,7 +538,7 @@ function RummyCtrl:logoutRoom()
 	end
 end
 
-function RummyCtrl:exitRoom(pack)
+function RoomCtrl:exitRoom(pack)
 	if not pack then return end
 	if pack.ret == 0 then
 		if pack.money and pack.money >= 0 then
@@ -548,18 +548,18 @@ function RummyCtrl:exitRoom(pack)
 	end
 end
 
-function RummyCtrl:castUserSit(pack)
+function RoomCtrl:castUserSit(pack)
 	if not pack then return end
 	seatMgr:castUserSit(pack)
 end
 
-function RummyCtrl:castUserExit(pack)
+function RoomCtrl:castUserExit(pack)
 	if not pack then return end
 	seatMgr:castUserExit(pack)
 end
 
 
-function RummyCtrl:sendCliDrawCard(regionId)
+function RoomCtrl:sendCliDrawCard(regionId)
 	if g.mySocket:isConnected() then
 		g.mySocket:send(g.mySocket:createPacketBuilder(CmdDef.CLI_RUMMY_DRAW_CARD)
 		:setParameter("uid", tonumber(g.user:getUid()))
@@ -568,7 +568,7 @@ function RummyCtrl:sendCliDrawCard(regionId)
   	end
 end
 
-function RummyCtrl:sendCliDiscardCard(cardIdx)
+function RoomCtrl:sendCliDiscardCard(cardIdx)
 	local mCards = roomInfo:getMCards()
 	if g.mySocket:isConnected() then
 			g.mySocket:send(g.mySocket:createPacketBuilder(CmdDef.CLI_RUMMY_DISCARD_CARD)
@@ -578,7 +578,7 @@ function RummyCtrl:sendCliDiscardCard(cardIdx)
 			:build())
 	end
 end
-function RummyCtrl:sendCliFinish(cardIdx)
+function RoomCtrl:sendCliFinish(cardIdx)
 	local mCards = roomInfo:getMCards()
 	roomInfo:setFinishCardIndex(cardIdx)
 	if g.mySocket:isConnected() then
@@ -588,7 +588,7 @@ function RummyCtrl:sendCliFinish(cardIdx)
 		:build())
 	end
 end
-function RummyCtrl:sendCliDrop()
+function RoomCtrl:sendCliDrop()
 	if g.mySocket:isConnected() then
 		g.mySocket:send(g.mySocket:createPacketBuilder(CmdDef.CLI_RUMMY_DROP)
 		:setParameter("uid", tonumber(g.user:getUid()))
@@ -596,7 +596,7 @@ function RummyCtrl:sendCliDrop()
 	end
 end
 
-function RummyCtrl:sendCliDeclare()
+function RoomCtrl:sendCliDeclare()
 	local groups = roomInfo:getCurGroups()
 	local mCards = roomInfo:getMCards()
     if g.mySocket:isConnected() then
@@ -624,15 +624,15 @@ function RummyCtrl:sendCliDeclare()
   	end
 end
 
-function RummyCtrl:vggSortCards()
-    local isOk = RummyUtil.refreshGroupsBySort()
+function RoomCtrl:vggSortCards()
+    local isOk = RoomUtil.refreshGroupsBySort()
     if isOk then
         seatMgr:updateMCards(roomInfo:getCurGroups())
     end
 end
 
-function RummyCtrl:vggGroupCards()
-    local isOk = RummyUtil.refreshGroupsByGroup(roomInfo:getMCardChooseList())
+function RoomCtrl:vggGroupCards()
+    local isOk = RoomUtil.refreshGroupsByGroup(roomInfo:getMCardChooseList())
     if isOk then
         seatMgr:updateMCards(roomInfo:getCurGroups())        
     end
@@ -640,18 +640,18 @@ function RummyCtrl:vggGroupCards()
     seatMgr:clearMCardChooseList()
 end
 
-function RummyCtrl:XXXX()
+function RoomCtrl:XXXX()
 	
 end
 
-function RummyCtrl:XXXX()
+function RoomCtrl:XXXX()
 	
 end
 
-function RummyCtrl:dispose()
+function RoomCtrl:dispose()
 	seatMgr:dispose()
 	roomMgr:dispose()
 	g.event:removeByTag(self)
 end
 
-return RummyCtrl
+return RoomCtrl

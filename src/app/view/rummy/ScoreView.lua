@@ -1,6 +1,6 @@
 local ScoreView = class("ScoreView", g.myUi.Window)
 local roomInfo = require("app.model.rummy.RoomInfo").getInstance()
-local RummyUtil = require("app.model.rummy.RummyUtil")
+local RoomUtil = require("app.model.rummy.RoomUtil")
 
 ScoreView.WIDTH = 1082
 ScoreView.HEIGHT = 648
@@ -239,7 +239,7 @@ function ScoreView:updateData(pack)
                             x = x + 38
                             for j=1,#pokerc do
                                 x = x + 16
-                                g.myUi.PokerCard.new():setCard(pokerc[j]):setMagicVisible(RummyUtil.isMagicCard(pokerc[j])):pos(x, posY[i]):addTo(self.node):showFront():scale(0.42)
+                                g.myUi.PokerCard.new():setCard(pokerc[j]):setMagicVisible(RoomUtil.isMagicCard(pokerc[j])):pos(x, posY[i]):addTo(self.node):showFront():scale(0.42)
                             end
                         end
                     end

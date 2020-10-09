@@ -2,23 +2,23 @@
 -- Date: 2020.04.14
 local funplaypoker = "没有用处，代码混淆用"
 
-local RummyUtil = class("RummyUtil")
+local RoomUtil = class("RoomUtil")
 local roomInfo = require("app.model.rummy.RoomInfo").getInstance()
-local RummyConst = require("app.model.rummy.RummyConst")
+local RoomConst = require("app.model.rummy.RoomConst")
 --我移位后的座位
-function RummyUtil.getFixSeatId(seatId)
+function RoomUtil.getFixSeatId(seatId)
      if roomInfo:getMSeatId() < 0 then --我是站起的
           return seatId
      end
-     local fixSeatId = RummyConst.MSeatId + (seatId - roomInfo:getMSeatId())
-     if fixSeatId > RummyConst.UserNum - 1 then 
-         fixSeatId = fixSeatId - RummyConst.UserNum
+     local fixSeatId = RoomConst.MSeatId + (seatId - roomInfo:getMSeatId())
+     if fixSeatId > RoomConst.UserNum - 1 then 
+         fixSeatId = fixSeatId - RoomConst.UserNum
      elseif fixSeatId < 0 then
-         fixSeatId = fixSeatId + RummyConst.UserNum
+         fixSeatId = fixSeatId + RoomConst.UserNum
      end
      return fixSeatId
 end
--- function RummyUtil.getCoinTextures(bet)
+-- function RoomUtil.getCoinTextures(bet)
 -- 		local chipRes = "#roomchip_chip.png"
 -- 		if app.gameId >= 10000 then
 -- 			chipRes = "#roomchip_gold.png"
@@ -36,7 +36,7 @@ end
 -- 		end
 -- 		return node
 -- end
-function RummyUtil.refreshGroupsBySort()
+function RoomUtil.refreshGroupsBySort()
     local mCards = roomInfo:getMCards()
     local VARIETY_DIAMOND = 0 -- 方块
     local VARIETY_CLUB    = 1 -- 梅花
@@ -74,7 +74,7 @@ function RummyUtil.refreshGroupsBySort()
     
     return true
 end
-function RummyUtil.calcMCardsByReconnect(svrGroups, pos)
+function RoomUtil.calcMCardsByReconnect(svrGroups, pos)
     local cards = {}
     for _, group in pairs(svrGroups) do
         if #group > 0 then
@@ -83,8 +83,8 @@ function RummyUtil.calcMCardsByReconnect(svrGroups, pos)
             end
         end
     end
-    if #cards >= RummyConst.DRAW_CARD_ID then -- 有新摸牌
-        local drawCardPos = RummyConst.DRAW_CARD_ID
+    if #cards >= RoomConst.DRAW_CARD_ID then -- 有新摸牌
+        local drawCardPos = RoomConst.DRAW_CARD_ID
         if pos > 0 then 
             drawCardPos = pos
         end
@@ -94,11 +94,11 @@ function RummyUtil.calcMCardsByReconnect(svrGroups, pos)
     dump(cards, "cards resort")
     return cards
 end
-function RummyUtil.refreshGroupsByReconnect(svrGroups, pos)
+function RoomUtil.refreshGroupsByReconnect(svrGroups, pos)
     local groups = {}
     local abMCards = clone(roomInfo:getMCards() or {})
     if #abMCards <= 0 then return false end -- 没牌
-    local drawCardPos = RummyConst.DRAW_CARD_ID
+    local drawCardPos = RoomConst.DRAW_CARD_ID
     if roomInfo:isInSelfDiscardStage() then
         if pos > 0 then 
             drawCardPos = pos
@@ -114,7 +114,7 @@ function RummyUtil.refreshGroupsByReconnect(svrGroups, pos)
                 if curIdx < drawCardPos then
                     table.insert(groups[i], curIdx)
                 elseif curIdx == drawCardPos then
-                    table.insert(groups[i], RummyConst.DRAW_CARD_ID)
+                    table.insert(groups[i], RoomConst.DRAW_CARD_ID)
                 elseif curIdx > drawCardPos then
                     table.insert(groups[i], curIdx - 1)
                 end
@@ -132,20 +132,20 @@ function RummyUtil.refreshGroupsByReconnect(svrGroups, pos)
     roomInfo:setCurGroups(modGroups)
     return true
 end
-function RummyUtil.refreshGroupsByDraw(drawCard)
-    -- 新摸牌id为RummyConst.DRAW_CARD_ID(弃牌后, id变为出牌id)
+function RoomUtil.refreshGroupsByDraw(drawCard)
+    -- 新摸牌id为RoomConst.DRAW_CARD_ID(弃牌后, id变为出牌id)
     local operGroups = roomInfo:getCurGroups()
-    if #operGroups == 1 or #operGroups >= RummyConst.MAX_GROUP_NUM then -- 只有一堆牌, 或者牌堆达到最大限制, 新摸牌放到最后牌堆
+    if #operGroups == 1 or #operGroups >= RoomConst.MAX_GROUP_NUM then -- 只有一堆牌, 或者牌堆达到最大限制, 新摸牌放到最后牌堆
         for _, group in pairs(operGroups) do
             if _ == #operGroups then
-                table.insert(group, RummyConst.DRAW_CARD_ID)
+                table.insert(group, RoomConst.DRAW_CARD_ID)
             end
         end
     else -- 牌堆没有达到最大限制, 新建牌堆放新摸的牌
-        table.insert(operGroups, {RummyConst.DRAW_CARD_ID})
+        table.insert(operGroups, {RoomConst.DRAW_CARD_ID})
     end
 end
-function RummyUtil.refreshGroupsByDiscard(cardIdx)
+function RoomUtil.refreshGroupsByDiscard(cardIdx)
     print("card,. cardIdx", string.format("%x", cardIdx))
     local operGroups = roomInfo:getCurGroups()
     local flag = false
@@ -163,10 +163,10 @@ function RummyUtil.refreshGroupsByDiscard(cardIdx)
         end
         if flag then break end
     end
-    if cardIdx ~= RummyConst.DRAW_CARD_ID then -- 弃牌不为新摸的牌, 需要将弃牌idx变为摸牌idx
+    if cardIdx ~= RoomConst.DRAW_CARD_ID then -- 弃牌不为新摸的牌, 需要将弃牌idx变为摸牌idx
         for gIdx, group in pairs(operGroups) do
             for curIdx = 1, #group do
-                if group[curIdx] == RummyConst.DRAW_CARD_ID then
+                if group[curIdx] == RoomConst.DRAW_CARD_ID then
                     group[curIdx] = cardIdx
                     break
                 end
@@ -177,7 +177,7 @@ function RummyUtil.refreshGroupsByDiscard(cardIdx)
         roomInfo:setCurGroups(operGroups)
     end
 end
-function RummyUtil.refreshGroupsByGroup(chooseCards)
+function RoomUtil.refreshGroupsByGroup(chooseCards)
     local bkupGroups = clone(roomInfo:getCurGroups())
     local operGroups = roomInfo:getCurGroups()
     -- 删掉选中的idxs
@@ -203,7 +203,7 @@ function RummyUtil.refreshGroupsByGroup(chooseCards)
     local mCards = roomInfo:getMCards()
     table.sort(chooseCards, function(a, b) return mCards[a] < mCards[b] end)
     table.insert(operGroups, chooseCards)
-    if #operGroups > RummyConst.MAX_GROUP_NUM then
+    if #operGroups > RoomConst.MAX_GROUP_NUM then
         g.myUi.topTip:showText("达到最大Group限制")
         roomInfo:setCurGroups(bkupGroups) -- 更新group项
         return false
@@ -211,7 +211,7 @@ function RummyUtil.refreshGroupsByGroup(chooseCards)
     roomInfo:setCurGroups(operGroups) -- 更新group项
     return true
 end
-function RummyUtil.refreshGroupsByMove(fromIndex, toIndex, frontBack) -- front, 0; back, 1
+function RoomUtil.refreshGroupsByMove(fromIndex, toIndex, frontBack) -- front, 0; back, 1
     if fromIndex == toIndex then return true end
     
     local operGroups = roomInfo:getCurGroups()
@@ -260,22 +260,22 @@ function RummyUtil.refreshGroupsByMove(fromIndex, toIndex, frontBack) -- front, 
     roomInfo:setCurGroups(operGroups) -- 更新group项
     return true
 end
-function RummyUtil.isMagicCard(cardUint)
+function RoomUtil.isMagicCard(cardUint)
     local originMagic = roomInfo:getMagicCard() or -1
 
-    if originMagic == RummyConst.JOKER then -- Joker是魔法牌, Ace作魔法牌
-        return cardUint == RummyConst.JOKER or cardUint % 16 == 0x0e
+    if originMagic == RoomConst.JOKER then -- Joker是魔法牌, Ace作魔法牌
+        return cardUint == RoomConst.JOKER or cardUint % 16 == 0x0e
     else
-        return cardUint ~= RummyConst.JOKER and cardUint % 16 == originMagic % 16 and originMagic ~= -1
+        return cardUint ~= RoomConst.JOKER and cardUint % 16 == originMagic % 16 and originMagic ~= -1
     end
 end
-function RummyUtil.getCardScore(cardUint)
+function RoomUtil.getCardScore(cardUint)
     local cardScore = 0
 
     local cardValue = cardUint % 16
-    if cardUint == RummyConst.JOKER then -- Joker牌
+    if cardUint == RoomConst.JOKER then -- Joker牌
         cardScore = 0
-    elseif RummyUtil.isMagicCard(cardUint) then -- 万能牌
+    elseif RoomUtil.isMagicCard(cardUint) then -- 万能牌
         cardScore = 0
     elseif cardValue >= 11 then -- J, Q, K, A
         cardScore = 10
@@ -286,13 +286,13 @@ function RummyUtil.getCardScore(cardUint)
     return cardScore
 end
 -- 使用前提, group牌大于2张
-function RummyUtil.isPureSequence(group)
+function RoomUtil.isPureSequence(group)
     local firstVariety = -1
     local mCards = roomInfo:getMCards()
     
     -- 有Joker牌, 不能组成纯顺子(可以有魔法牌, 魔法牌当普通牌)
     for _, cardIdx in pairs(group) do
-        if mCards[cardIdx] == RummyConst.JOKER then
+        if mCards[cardIdx] == RoomConst.JOKER then
             return false
         end
     end
@@ -341,7 +341,7 @@ function RummyUtil.isPureSequence(group)
     return true
 end
 -- 使用前提, group牌大于2张
-function RummyUtil.isSequence(group) -- 是顺子, 且不是纯顺子
+function RoomUtil.isSequence(group) -- 是顺子, 且不是纯顺子
     if #group > 13 then -- 大于13张牌, 不能组成顺子
         return false
     end
@@ -349,7 +349,7 @@ function RummyUtil.isSequence(group) -- 是顺子, 且不是纯顺子
     local variableCardNum = 0
     local commonCards = {}
     for _, cardIdx in pairs(group) do
-        if mCards[cardIdx] == RummyConst.JOKER or RummyUtil.isMagicCard(mCards[cardIdx]) then
+        if mCards[cardIdx] == RoomConst.JOKER or RoomUtil.isMagicCard(mCards[cardIdx]) then
             variableCardNum = variableCardNum + 1
         else
             table.insert(commonCards, mCards[cardIdx])
@@ -410,7 +410,7 @@ function RummyUtil.isSequence(group) -- 是顺子, 且不是纯顺子
     end
 end
 -- 使用前提, group牌大于2张
-function RummyUtil.isCardTypeSet(group) -- 判断是否是条
+function RoomUtil.isCardTypeSet(group) -- 判断是否是条
     if #group > 4 then -- 大于4张牌, 不能组成条
         return false
     end
@@ -418,7 +418,7 @@ function RummyUtil.isCardTypeSet(group) -- 判断是否是条
     local variableCardNum = 0
     local commonCards = {}
     for _, cardIdx in pairs(group) do
-        if mCards[cardIdx] == RummyConst.JOKER or RummyUtil.isMagicCard(mCards[cardIdx]) then
+        if mCards[cardIdx] == RoomConst.JOKER or RoomUtil.isMagicCard(mCards[cardIdx]) then
             variableCardNum = variableCardNum + 1
         else
             table.insert(commonCards, mCards[cardIdx])
@@ -452,44 +452,44 @@ function RummyUtil.isCardTypeSet(group) -- 判断是否是条
 
     return true
 end
-function RummyUtil.getGroupConfs(inspectGroups)
+function RoomUtil.getGroupConfs(inspectGroups)
     local confs = {}
     local mCards = roomInfo:getMCards()
     for i, group in pairs(inspectGroups) do
         confs[i] = confs[i] or {}
         confs[i].point = 0
-        confs[i].cardType = RummyUtil.getGroupCardType(group)
+        confs[i].cardType = RoomUtil.getGroupCardType(group)
         confs[i].cardNum = #group
         for _, cardIdx in pairs(group) do
-            confs[i].point = confs[i].point + RummyUtil.getCardScore(mCards[cardIdx])
+            confs[i].point = confs[i].point + RoomUtil.getCardScore(mCards[cardIdx])
         end
-        if confs[i].point > RummyConst.MAX_SCORE then -- 最大分数
-            confs[i].point = RummyConst.MAX_SCORE
+        if confs[i].point > RoomConst.MAX_SCORE then -- 最大分数
+            confs[i].point = RoomConst.MAX_SCORE
         end
     end
 
     local isHasPureSequence = false
     local sequenceCount = 0
     for i, conf in pairs(confs) do
-        if conf.cardType == RummyConst.STRAIGHT_FLUSH then
+        if conf.cardType == RoomConst.STRAIGHT_FLUSH then
             isHasPureSequence = true
         end
-        if conf.cardType == RummyConst.STRAIGHT_FLUSH or conf.cardType == RummyConst.STRAIGHT then
+        if conf.cardType == RoomConst.STRAIGHT_FLUSH or conf.cardType == RoomConst.STRAIGHT then
             sequenceCount = sequenceCount + 1
         end
     end
 
     for i, conf in pairs(confs) do
         conf.isValid = false
-        if conf.cardType == RummyConst.STRAIGHT_FLUSH then
+        if conf.cardType == RoomConst.STRAIGHT_FLUSH then
             conf.isValid = true
             conf.point = 0
-        elseif conf.cardType == RummyConst.STRAIGHT then
+        elseif conf.cardType == RoomConst.STRAIGHT then
             if isHasPureSequence then
                 conf.isValid = true
                 conf.point = 0
             end
-        elseif conf.cardType == RummyConst.SANGONG then
+        elseif conf.cardType == RoomConst.SANGONG then
             if isHasPureSequence and sequenceCount >= 2 then
                 conf.isValid = true
                 conf.point = 0
@@ -499,21 +499,21 @@ function RummyUtil.getGroupConfs(inspectGroups)
     return confs
 end
 -- 使用前提, group牌大于2张
-function RummyUtil.getGroupCardType(group)
-    local cardType = RummyConst.OTHERS
+function RoomUtil.getGroupCardType(group)
+    local cardType = RoomConst.OTHERS
     local mCards = roomInfo:getMCards()
     if #group <= 2 then
-        cardType = RummyConst.OTHERS
-    elseif RummyUtil.isPureSequence(group) then -- 纯顺子
-        cardType = RummyConst.STRAIGHT_FLUSH
-    elseif RummyUtil.isSequence(group) then -- 顺子
-        cardType = RummyConst.STRAIGHT
-    elseif RummyUtil.isCardTypeSet(group) then -- 条
-        cardType = RummyConst.SANGONG
+        cardType = RoomConst.OTHERS
+    elseif RoomUtil.isPureSequence(group) then -- 纯顺子
+        cardType = RoomConst.STRAIGHT_FLUSH
+    elseif RoomUtil.isSequence(group) then -- 顺子
+        cardType = RoomConst.STRAIGHT
+    elseif RoomUtil.isCardTypeSet(group) then -- 条
+        cardType = RoomConst.SANGONG
     end
     return cardType
 end
-function RummyUtil.isGroupsEqual(groups1, groups2)
+function RoomUtil.isGroupsEqual(groups1, groups2)
     print(table.nums(groups1))
     print(table.nums(groups2))
     if table.nums(groups1) ~= table.nums(groups2) then
@@ -538,7 +538,7 @@ function RummyUtil.isGroupsEqual(groups1, groups2)
 
     return true
 end
-function RummyUtil.getArrayFormOfCurGroups()
+function RoomUtil.getArrayFormOfCurGroups()
     local groups = roomInfo:getCurGroups()
     local array = {}
     local curIndex = 0
@@ -553,10 +553,10 @@ end
 local CARD_GAP = 40
 local PILE_GAP = 146
 local CARD_WIDTH = 120
-function RummyUtil.getCardGap()
+function RoomUtil.getCardGap()
     return CARD_GAP
 end
-function RummyUtil.getRelativePosXList(groups)
+function RoomUtil.getRelativePosXList(groups)
     local posXList = {}
     local cardsCnt = 0
     for _, group in pairs(groups) do
@@ -573,7 +573,7 @@ function RummyUtil.getRelativePosXList(groups)
     return posXList
 end
 -- 关于组点数和牌型信息的位置x列表
-function RummyUtil.getGroupTipRelativePosXList(groups)
+function RoomUtil.getGroupTipRelativePosXList(groups)
     local posXList = {}
     local cardsCnt = 0
     for _, group in pairs(groups) do
@@ -587,4 +587,4 @@ function RummyUtil.getGroupTipRelativePosXList(groups)
     end
     return posXList
 end
-return RummyUtil
+return RoomUtil
