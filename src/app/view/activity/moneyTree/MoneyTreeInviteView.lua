@@ -352,8 +352,8 @@ end
 function MoneyTreeInviteView:setGuideClickPrompt(isShowCover, callback)
     if isShowCover == true then
         if not self.guideClickNextCover then
-            -- self.guideClickNextCover = display.newScale9Sprite(g.Res.blank, 0, 0, cc.size(1029, 635))
-            self.guideClickNextCover = display.newScale9Sprite(g.Res.black, 0, 0, cc.size(1029, 635))
+            self.guideClickNextCover = display.newScale9Sprite(g.Res.blank, 0, 0, cc.size(1029, 635))
+            -- self.guideClickNextCover = display.newScale9Sprite(g.Res.black, 0, 0, cc.size(1029, 635))
                 :addTo(self, 99)
             
             self.guideClickNextCover:addNodeEventListener(cc.NODE_TOUCH_EVENT, callback)

@@ -31,15 +31,7 @@ function MoneyTreeCtrl:getTreeType()
 end
 
 function MoneyTreeCtrl:onWaterButtonClick()
-    if self:getCurTreeShowUid() == tonumber(g.user:getUid()) then
-        self:requestWaterMyTree(handler(self, self.onRequestWaterMyTreeSucc))
-    else
-        local params = {}
-        params.uid = self:getCurTreeShowUid()
-        self:requestWaterOtherTree(params, handler(self, function (self, data)
-            self:onRequestWaterOtherTreeSucc(data, params.uid)
-        end))
-    end
+	self:requestWaterTree(handler(self.viewObj, self.viewObj.onRequestWaterTreeSucc))
 end
 
 function MoneyTreeCtrl:onInviteGuideButtonClick()
@@ -52,25 +44,7 @@ function MoneyTreeCtrl:showMoneyTreeInvitePopup()
     end
 end
 
-function MoneyTreeCtrl:requestMyTreeInfo(successCallback, failCallback, noLoading)
-	if self.httpIds['myTreeInfo'] then return end
-	local resetWrapHandler = handler(self, function ()
-			self.httpIds['myTreeInfo'] = nil
-	end)
-
-	if not noLoading then
-			g.myUi.miniLoading:show()
-	end
-
-	local reqParams = {}
-	reqParams._interface = "/moneyTree/myTreeInfo"
-	reqParams.treeType = self:getTreeType()
-	reqParams.uid = g.user:getUid()
-	self.httpIds['myTreeInfo'] = g.http:simplePost(reqParams,
-			successCallback, failCallback, resetWrapHandler)
-end
-
-function MoneyTreeCtrl:requestTreeInfo(successCallback, failCallback, noLoading)
+function MoneyTreeCtrl:requestTreeInfo(successCallback, failCallback, noLoading, uid)
 	if self.httpIds['treeInfo'] then return end
 	local resetWrapHandler = handler(self, function ()
 			self.httpIds['treeInfo'] = nil
@@ -83,7 +57,7 @@ function MoneyTreeCtrl:requestTreeInfo(successCallback, failCallback, noLoading)
 	local reqParams = {}
 	reqParams._interface = "/moneyTree/treeInfo"
 	reqParams.treeType = self:getTreeType()
-	reqParams.uid = self:getCurTreeShowUid()
+	reqParams.treeUid = tonumber(uid) or self:getCurTreeShowUid() or g.user:getUid()
 	self.httpIds['treeInfo'] = g.http:simplePost(reqParams,
 			successCallback, failCallback, resetWrapHandler)
 end
@@ -105,8 +79,41 @@ function MoneyTreeCtrl:requestInviteCodeInfo(successCallback, failCallback, noLo
         successCallback, failCallback, resetWrapHandler)
 end
 
-function MoneyTreeCtrl:XXXX()
-    
+function MoneyTreeCtrl:requestRankList(successCallback, failCallback, noLoading)
+    if self.httpIds['friendRank'] then return end
+	local resetWrapHandler = handler(self, function ()
+			self.httpIds['friendRank'] = nil
+	end)
+
+	if not noLoading then
+			g.myUi.miniLoading:show()
+	end
+
+	local reqParams = {}
+	reqParams._interface = "/moneyTree/friendRank"
+	reqParams.treeType = self:getTreeType()
+	reqParams.uid = g.user:getUid()
+	self.httpIds['friendRank'] = g.http:simplePost(reqParams,
+			successCallback, failCallback, resetWrapHandler)
+end
+
+function MoneyTreeCtrl:requestWaterTree(successCallback, failCallback, noLoading, uid)
+	if self.httpIds['waterTree'] then return end
+	local resetWrapHandler = handler(self, function ()
+			self.httpIds['waterTree'] = nil
+	end)
+
+	if not noLoading then
+			g.myUi.miniLoading:show()
+	end
+
+	local reqParams = {}
+	reqParams._interface = "/moneyTree/waterTree"
+	reqParams.treeType = self:getTreeType()
+	reqParams.treeUid = self:getCurTreeShowUid()
+	reqParams.waterUid = waterUid
+	self.httpIds['waterTree'] = g.http:simplePost(reqParams,
+			successCallback, failCallback, resetWrapHandler)
 end
 
 function MoneyTreeCtrl:XXXX()

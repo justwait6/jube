@@ -71,9 +71,8 @@ function LangUtil:getDefaultHostUrl()
     return langConf[tostring(LANG)].hostUrl
 end
 
-function LangUtil:addPlatformSearchPath()
-    local pathName = langConf[tostring(LANG)].platformResPath
-    cc.FileUtils:getInstance():addSearchPath(pathName)
+function LangUtil:getLangResPath()
+    return langConf[tostring(LANG)].langResPath
 end
 
 return LangUtil

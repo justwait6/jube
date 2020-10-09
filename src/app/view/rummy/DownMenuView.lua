@@ -99,7 +99,7 @@ end
 
 function DownMenuView:onShowPopUp()
 	self.backGround_:stopAllActions()
-	poker.setAllCascadeOpacityEnabled(self.backGround_)
+	g.myFunc:setAllCascadeOpacityEnabled(self.backGround_)
 	self.backGround_:setScale(0.88):opacity(0.85*255)
 	local fadeAction = cc.FadeIn:create(0.18)
 	local scaleAction = cc.ScaleTo:create(0.15,1)

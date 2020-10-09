@@ -47,9 +47,9 @@ end
 
 function MoneyTreeView:onShow()
     if self.ctrl then
-        self.ctrl:requestMyTreeInfo(handler(self, self.onRequestMyTreeInfoSucc))
+        self.ctrl:requestTreeInfo(handler(self, self.onRequestTreeInfoSucc))
     end
-    self:requestRankList(handler(self, self.onRequestRankListSucc))
+    self.ctrl:requestRankList(handler(self, self.onRequestRankListSucc))
 end
 
 function MoneyTreeView:initConfig(treeType)
@@ -132,7 +132,7 @@ function MoneyTreeView:initOtherTreeView()
         :addTo(self.otherTreeViewNode)
 
     display.newSprite(g.Res.moneytree_myTreeLbl)
-        :pos(0, -34)
+        :pos(homeButton:getContentSize().width / 2, 0)
         :addTo(homeButton)
 
     self:initComparePanel()
@@ -141,6 +141,7 @@ end
 function MoneyTreeView:initMyInfoPanel()
     -- 当前金币(筹码)显示
     self.myInfoNode = display.newNode():pos(490, 176):addTo(self):hide()
+    g.myFunc:setAllCascadeOpacityEnabled(self.myInfoNode)
     display.newSprite(g.Res.moneytree_myInfoBg)
         :addTo(self.myInfoNode)
 
@@ -284,9 +285,11 @@ end
 
 function MoneyTreeView:initComparePanel()
     self.compareNode = display.newNode():pos(490, -65):addTo(self):hide()
+    g.myFunc:setAllCascadeOpacityEnabled(self.compareNode)
     -- 比较面板己方
     self.vsMyAttrs = {}
     self.vsMyNode = self:createVsPanel(self.vsMyAttrs):pos(0, 170):addTo(self.compareNode)
+    g.myFunc:setAllCascadeOpacityEnabled(self.vsMyNode)
     self.vsMyWaterCount = self.vsMyAttrs.waterCount
 
     -- VS标签
@@ -295,6 +298,7 @@ function MoneyTreeView:initComparePanel()
     -- 比较面板对方
     self.vsHisAttrs = {}
     self.vsHisNode = self:createVsPanel(self.vsHisAttrs):pos(0, -170):addTo(self.compareNode)
+    g.myFunc:setAllCascadeOpacityEnabled(self.vsHisNode)
 end
 
 function MoneyTreeView:createVsPanel(attributes)
@@ -377,7 +381,7 @@ function MoneyTreeView:updateVsPanel(node, vsAttrs, data)
         vsAttrs.headerImage:removeFromParent()
         -- 重新创建头像
         vsAttrs.headerImage = g.myUi.AvatarView.new({
-            radius = 74,
+            radius = 74 / 2,
             gender = g.user:getGender(),
             frameRes = g.Res.moneytree_imageFrameR,
             avatarUrl = data.icon,
@@ -669,8 +673,8 @@ function MoneyTreeView:onRequestCollectOwnCoinSucc(data)
     -- printVgg("MoneyTreeView:onRequestCollectOwnCoinSucc: ", dump(data))
 
     local completeCallback = handler(self, function ()
-        self:requestRankList(handler(self, self.onRequestRankListSucc), nil, true)
-        self:requestMyTreeInfo(handler(self, self.onRequestMyTreeInfoSucc), nil, true)
+        self.ctrl:requestRankList(handler(self, self.onRequestRankListSucc), nil, true)
+        self.ctrl:requestTreeInfo(handler(self, self.onRequestTreeInfoSucc), nil, true)
         self:setForbidOperation(false)
     end)
     if self.curReqCoinField == CoinField.WATER then
@@ -690,7 +694,7 @@ end
 
 function MoneyTreeView:onRequestCollectOwnCoinFail(data)
     if type(data) == "table" and tonumber(data.ret) == 5 then
-        self:requestMyTreeInfo(handler(self, self.onRequestMyTreeInfoSucc), nil, true)
+        self.ctrl:requestTreeInfo(handler(self, self.onRequestTreeInfoSucc))
     end
     self:setForbidOperation(false)
 end
@@ -732,8 +736,8 @@ function MoneyTreeView:onRequestCollectOtherCoinSucc(data)
     local data = data or {}
     local dataInfo = data.info or {}
     local completeCallback = handler(self, function ()
-        self:requestRankList(handler(self, self.onRequestRankListSucc), nil, true)
-        self:tryRequestOtherTreeInfo(self:getCurTreeShowUid())
+        self.ctrl:requestRankList(handler(self, self.onRequestRankListSucc), nil, true)
+        self.ctrl:requestTreeInfo(handler(self, self.onRequestTreeInfoSucc))
         self:setForbidOperation(false)
     end)
     self:playCollectStealCoinAnim(dataInfo.temmoney, self.curReqCoin, dataInfo.temoney or 0, nil)
@@ -742,7 +746,7 @@ end
 
 function MoneyTreeView:onRequestCollectOtherCoinFail(data)
     if type(data) == "table" and tonumber(data.ret) == 5 then
-        self:tryRequestOtherTreeInfo(self:getCurTreeShowUid())
+        self.ctrl:requestTreeInfo(handler(self, self.onRequestTreeInfoSucc))
     end
     self:setForbidOperation(false)
 end
@@ -1011,7 +1015,7 @@ function MoneyTreeView:newMyInviteItem(itemParams, itemSize, outerId)
     -- 用户头像
     g.myUi.AvatarView.new({
         radius = 39,
-        gender = g.user:getGender(),
+        gender = itemParams.gender,
         frameRes = g.Res.moneytree_imageFrameL,
         avatarUrl = itemParams.icon,
         clickOptions = {default = true, uid = itemParams.uid},
@@ -1063,12 +1067,7 @@ function MoneyTreeView:onRankItemClick(target, evt, id, uid)
         self.myInvitesSelectedLbls[id]:show()
     end
     self.lastItemSelected = id
-
-    if tonumber(uid) == tonumber(g.user:getUid()) then
-        self:requestMyTreeInfo(handler(self, self.onRequestMyTreeInfoSucc), nil, true)
-    else
-        self:tryRequestOtherTreeInfo(uid)
-    end
+    self.ctrl:requestTreeInfo(handler(self, self.onRequestTreeInfoSucc), nil, true, uid)
 
     -- g.audio:playSound(g.Audio.Effects.CLICK_BUTTON)
 end
@@ -1152,30 +1151,69 @@ function MoneyTreeView:showGuideStep(guideStep)
     end
 end
 
+function MoneyTreeView:onRequestTreeInfoSucc(data)
+    local treeUid = data.treeUid
+    
+    if tonumber(treeUid) == tonumber(g.user:getUid()) then
+        data = {
+            treeUid = g.user:getUid(),
+            info = {
+                own = {
+                    dyInfo = {{
+                        name = "MuMu",
+                        text = "?????????????",
+                        time = 1574308156,
+                        type = 2,
+                    }},
+                    exp = 6,
+                    isWater = 1,
+                    level = 1,
+                    maxExp = 50,
+                    ownPokerMoney = 140,
+                    timerMoney = 0,
+                    timerTxt = "18:00??????????????",
+                    timerVal = 10000,
+                    waterMoney = 0,
+                    waterMoneyCount = 1,
+                }
+            },
+            ret = 0
+        }
+        self:onRequestMyTreeInfoSucc(data)
+    else
+        data = {
+            treeUid = g.user:getUid(),
+            info = {
+                own = {
+                    dyInfo = {{
+                        name = "MuMu",
+                        text = "?????????????",
+                        time = 1574308156,
+                        type = 2,
+                    }},
+                    exp = 6,
+                    isWater = 1,
+                    level = 1,
+                    maxExp = 50,
+                    ownPokerMoney = 140,
+                    timerMoney = 0,
+                    timerTxt = "18:00??????????????",
+                    timerVal = 10000,
+                    waterMoney = 0,
+                    waterMoneyCount = 1,
+                },
+                vsInfo = {
+                    {takeMoney = 10, waterCount = 2},
+                    {uid = 123, icon = "", name = "some name", gender = 0, money = 100, takeMoney = 12, waterCount = 1},
+                }
+            },
+            ret = 0
+        }
+        self:onRequestOtherTreeInfoSucc(data, treeUid)
+    end
+end
+
 function MoneyTreeView:onRequestMyTreeInfoSucc(data)
-	data = {
-		info = {
-			own = {
-				dyInfo = {{
-					name = "MuMu",
-					text = "?????????????",
-					time = 1574308156,
-					type = 2,
-				}},
-				exp = 6,
-				isWater = 1,
-				level = 1,
-				maxExp = 50,
-				ownPokerMoney = 140,
-				timerMoney = 0,
-				timerTxt = "18:00??????????????",
-				timerVal = 10000,
-				waterMoney = 0,
-				waterMoneyCount = 1,
-			}
-		},
-		ret = 0
-	}
     local data = data or {}
     local dataInfo = data.info or {}
     local dataOwnInfo = dataInfo.own or {}
@@ -1193,50 +1231,6 @@ function MoneyTreeView:onRequestMyTreeInfoSucc(data)
     end
 end
 
-function MoneyTreeView:tryRequestOtherTreeInfo(uid)
-    local params = {}
-    params.uid = uid
-    self:requestOtherTreeInfo(params, handler(self, function (self, data)
-        self:onRequestOtherTreeInfoSucc(data, uid)
-    end), handler(self, self.onRequestOtherTreeInfoFail), true)
-end
-
-function MoneyTreeView:requestOtherTreeInfo(reqParams, successCallback, failCallback, noLoading)
-    if self.httpOtherTreeInfoId then return end
-    if not noLoading then
-        g.myUi.miniLoading:show()
-    end
-
-    local param = {}
-    param.cmd = "NewMoneyTree-otherTreeInfo"
-    param.param = {}
-    param.param.type = self.treeType
-    param.param.frienduid = reqParams.uid
-    self.httpOtherTreeInfoId = g.http:post(param,
-        function(data)
-            g.myUi.miniLoading:hide()
-            self.httpOtherTreeInfoId = nil
-            local result = json.decode(data)
-            -- dump(result)
-            if result and result.ret == 0 then
-                if successCallback then
-                    successCallback(result)
-                end
-            else
-                if failCallback then
-                    failCallback(result)
-                end
-            end
-        end,
-        handler(self, function(self, errCode)
-            g.myUi.miniLoading:hide()
-            self.httpOtherTreeInfoId = nil
-            if tonumber(errCode) == 28 or tonumber(errCode) == 7 then 
-                g.myUi.topTip:showText(g.lang:getText("HTTP", "TIMEOUT"))
-            end
-        end))
-end
-
 function MoneyTreeView:onRequestOtherTreeInfoSucc(data, uid)
     local data = data or {}
     local dataInfo = data.info or {}
@@ -1247,7 +1241,7 @@ function MoneyTreeView:onRequestOtherTreeInfoSucc(data, uid)
     -- printVgg("onRequestOtherTreeInfoSucc vsInfo", uid, dump(dataVsInfo))
     self:updateVsPanel(self.vsMyNode, self.vsMyAttrs, {
         uid = g.user:getUid(),
-        icon = g.user:getIcon(),
+        icon = g.user:getIconUrl(),
         name = g.user:getName(),
         gender = g.user:getGender(),
         currencyCount = dataVsInfo[1].money,
@@ -1280,48 +1274,39 @@ function MoneyTreeView:onRequestOtherTreeInfoSucc(data, uid)
     end
 end
 
-function MoneyTreeView:onRequestOtherTreeInfoFail(data)
-    if type(data) == "table" and tonumber(data.ret) == 9 then
-        g.myUi.topTip:showText(g.lang:getText("MONEYTREE", "NEED_UPDATE"))
-    end
-end
-
-function MoneyTreeView:requestWaterMyTree(successCallback, failCallback)
-    if not self:getCanWater() then
-        g.myUi.topTip:showText(g.lang:getText("MONEYTREE", "COME_TOMORROW"))
-        return
-    end
+function MoneyTreeView:onRequestWaterTreeSucc(data)
+    dump(data, "hh")
+    local treeUid = data.treeUid
     
-    if self.httpWaterMyTreeId then return end
-    g.myUi.miniLoading:show()
-
-    local param = {}
-    param.cmd = "NewMoneyTree-ownWaterTree"
-    param.param = {}
-    param.param.type = self.treeType
-    self.httpWaterMyTreeId = g.http:post(param,
-        function(data)
-            g.myUi.miniLoading:hide()
-            self.httpWaterMyTreeId = nil
-            local result = json.decode(data)
-            -- dump(result)
-            if result and result.ret == 0 then
-                if successCallback then
-                    successCallback(result)
-                end
-            else
-                if failCallback then
-                    failCallback(result)
-                end
-            end
-        end,
-        handler(self, function(self, errCode)
-            g.myUi.miniLoading:hide()
-            self.httpWaterMyTreeId = nil
-            if tonumber(errCode) == 28 or tonumber(errCode) == 7 then 
-                g.myUi.topTip:showText(g.lang:getText("HTTP", "TIMEOUT"))
-            end
-        end))
+    if tonumber(treeUid) == tonumber(g.user:getUid()) then
+        data = {
+            treeUid = g.user:getUid(),
+            info = {
+                incExp = 1,
+                level = 2,
+                exp = 7,
+                maxExp = 50,
+                waterMoney = 10,
+                waterMoneyCount = 12,
+            },
+            ret = 0
+        }
+        self:onRequestWaterMyTreeSucc(data)
+    else
+        data = {
+            treeUid = g.user:getUid(),
+            info = {
+                incExp = 2,
+                level = 2,
+                exp = 8,
+                maxExp = 50,
+                waterMoney = 10,
+                waterMoneyCount = 13,
+            },
+            ret = 0
+        }
+        self:onRequestWaterOtherTreeSucc(data, treeUid)
+    end
 end
 
 function MoneyTreeView:onRequestWaterMyTreeSucc(data)
@@ -1354,51 +1339,13 @@ function MoneyTreeView:refreshWaterCoin(dataInfo)
     end
 end
 
-function MoneyTreeView:requestWaterOtherTree(reqParams, successCallback)
-    if not self:getCanWater() then
-        g.myUi.topTip:showText(g.lang:getText("MONEYTREE", "COME_TOMORROW"))
-        return
-    end
-    if self.httpWaterOtherTreeId then return end
-    g.myUi.miniLoading:show()
-
-    local param = {}
-    param.cmd = "NewMoneyTree-otherWaterTree"
-    param.param = {}
-    param.param.type = self.treeType
-    param.param.frienduid = reqParams.uid
-    self.httpWaterOtherTreeId = g.http:post(param,
-        function(data)
-            g.myUi.miniLoading:hide()
-            self.httpWaterOtherTreeId = nil
-            local result = json.decode(data)
-            -- dump(result)
-            if result and result.ret == 0 then
-                if successCallback then
-                    successCallback(result)
-                end
-            else
-                if failCallback then
-                    failCallback(result)
-                end
-            end
-        end,
-        handler(self, function(self, errCode)
-            g.myUi.miniLoading:hide()
-            self.httpWaterOtherTreeId = nil
-            if tonumber(errCode) == 28 or tonumber(errCode) == 7 then 
-                g.myUi.topTip:showText(g.lang:getText("HTTP", "TIMEOUT"))
-            end
-        end))
-end
-
 function MoneyTreeView:onRequestWaterOtherTreeSucc(data, uid)
     local data = data or {}
     local dataInfo = data.info or {}
     -- printVgg("onRequestWaterOtherTreeSucc 111 dump(data)", dump(data))
     self:playWaterAnim(handler(self, function ()
         self:playAddExpAnim(dataInfo.incExp)
-        self:updateTreeLevelInfo(dataInfo.level, dataInfo.moneyExp, dataInfo.maxExp)
+        self:updateTreeLevelInfo(dataInfo.level, dataInfo.exp, dataInfo.maxExp)
         self:updateVsWaterCountLbl(dataInfo.waterCount)
         self:refreshWaterCoin(dataInfo)
     end))
@@ -1408,46 +1355,34 @@ function MoneyTreeView:onRequestWaterOtherTreeSucc(data, uid)
     end
 end
 
-function MoneyTreeView:requestRankList(successCallback, failCallback, noShowLoading)
-    if self.httpRankListId then return end
-    if not noShowLoading then
-        g.myUi.miniLoading:show()
-    end
-
-    local param = {}
-    param.cmd = "NewMoneyTree-friendRank"
-    param.param = {}
-    param.param.type = self.treeType
-    self.httpRankListId = g.http:post(param,
-        function(data)
-            g.myUi.miniLoading:hide()
-            self.httpRankListId = nil
-            local result = json.decode(data)
-            -- dump(result, nil, 4)
-            if result and result.ret == 0 then
-                if successCallback then
-                    successCallback(result)
-                end
-            else
-                if failCallback then
-                    failCallback(result)
-                end
-            end
-        end,
-        handler(self, function(self, errCode)
-            g.myUi.miniLoading:hide()
-            self.httpRankListId = nil
-            if tonumber(errCode) == 28 or tonumber(errCode) == 7 then 
-                g.myUi.topTip:showText(g.lang:getText("HTTP", "TIMEOUT"))
-            end
-        end))
-end
-
 function MoneyTreeView:onRequestRankListSucc(data)
+    local data = {
+		info = {
+			{
+                uid = 123,
+                gender = 0,
+                icon = "",
+                name = "some name",
+                money = 100,
+                level = 1,
+                isSteal = 0,
+        
+            },
+            {
+                uid = g.user:getUid(),
+                gender = g.user:getGender(),
+                icon = "",
+                name = g.user:getName(),
+                money = g.user:getMoney(),
+                level = 1,
+                isSteal = 1,
+        
+            },
+		},
+		ret = 0
+	}
     -- printVgg("MoneyTreeView:onRequestRankListSucc dump(data)", dump(data))
-    local data = data or {}
     local dataInfo = data.info or {}
-    dataInfo.rank = dataInfo.rank or {}
 
     if self.myInvitesListView then
         self.myInvitesListView:removeAllItems()
@@ -1469,8 +1404,8 @@ function MoneyTreeView:onRequestRankListSucc(data)
 end
 
 function MoneyTreeView:onBindCodeSucc()
-    self:requestRankList(handler(self, self.onRequestRankListSucc))
-    self:requestMyTreeInfo(handler(self, self.onRequestMyTreeInfoSucc))
+    self.ctrl:requestRankList(handler(self, self.onRequestRankListSucc))
+    self.ctrl:requestTreeInfo(handler(self, self.onRequestTreeInfoSucc))
 end
 
 function MoneyTreeView:showMoneyTreeInvitePopup()
@@ -2028,16 +1963,6 @@ function MoneyTreeView:startRunCoinSrcDescTipAction(node, nextCallback)
 end
 
 function MoneyTreeView:onClearPopup()
-    if self.ctrl then
-        g.http:cancel(self.httpBaseInfoId)
-    end
-    g.http:cancel(self.httpMyTreeInfoId)
-    g.http:cancel(self.httpRankListId)
-    g.http:cancel(self.httpCollectMyCoinId)
-    g.http:cancel(self.httpCollectOtherCoinId)
-    g.http:cancel(self.httpOtherTreeInfoId)
-    g.http:cancel(self.httpWaterMyTreeId)
-    g.http:cancel(self.httpWaterOtherTreeId)
     if self.curGuideSchedId then g.mySched:cancel(self.curGuideSchedId) end
     display.removeSpriteFramesWithFile("image/activity/moneytree/tree_water.plist", "image/activity/moneytree/tree_water.png")
 end

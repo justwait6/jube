@@ -18,8 +18,11 @@ end
 
 function MyApp:run()
     cc.FileUtils:getInstance():addSearchPath("res/")
+    if device.platform == "windows" then
+        local path = g.lang:getLangResPath();
+        cc.FileUtils:getInstance():addSearchPath(path)
+    end
     self:addRes()
-    g.lang:addPlatformSearchPath()
     self:enterScene("LoginScene")
 end
 
