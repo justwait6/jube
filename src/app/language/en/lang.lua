@@ -33,6 +33,8 @@ L.LOGIN.GO_LOGIN 							 = "去登录"
 L.HALL = {}
 L.HALL.HALL_TIPS 							 = "你果然来了, 这是大厅, 我告诉你下一步怎么走"
 L.HALL.ENTER_ROOM 							 = "进入房间"
+L.HALL.DIZHU 							     = "斗地主"
+L.HALL.RUMMY 							     = "Rummy"
 
 L.HTTP = {}
 L.HTTP.TIMEOUT 								 = "连接超时"

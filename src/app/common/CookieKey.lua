@@ -13,5 +13,6 @@ end
 
 K.VOLUME = K.getName()
 K.CHAT_UIDS = K.getName()
+K.GAME_ID = K.getName()
 
 return COOKIE_KEYS
