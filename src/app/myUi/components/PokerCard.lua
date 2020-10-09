@@ -11,7 +11,9 @@ local VARIETY_DIAMOND = 0 -- 方块
 local VARIETY_CLUB    = 1 -- 梅花
 local VARIETY_HEART   = 2 -- 红桃
 local VARIETY_SPADE   = 3 -- 黑桃
-local VARIETY_JOKER   = 4 -- Joker牌(目前只有一张, server定义是0x4f)
+local VARIETY_JOKER   = 4 -- Joker牌(0x4e小王; 0x4f大王)
+local SMALL_JOKER     = 0x4e -- 小Joker牌
+local BIG_JOKER       = 0x4f -- 大Joker牌
 
 local function getValue(cardUint)
     return cardUint % 16
@@ -153,8 +155,14 @@ function PokerCard:setCard(cardUint)
     elseif self.cardVariety_ == VARIETY_JOKER then
         self.numberSpr_:hide()
         self.smallVarietySpr_:hide()
+        if cardUint == SMALL_JOKER then
+            self.bigVarietySpr_:setSpriteFrame(getFrame("character_black_joker.png"))
+            self.jokerSpr_:setSpriteFrame(getFrame("black_joker.png"))
+        elseif cardUint == BIG_JOKER then
+            self.bigVarietySpr_:setSpriteFrame(getFrame("character_red_joker.png"))
+            self.jokerSpr_:setSpriteFrame(getFrame("red_joker.png"))
+        end
         self.jokerSpr_:show()
-        self.bigVarietySpr_:setSpriteFrame(getFrame("character_red_joker.png"))
     end
     if self.cardVariety_ ~= VARIETY_JOKER then
         self.numberSpr_:show()
