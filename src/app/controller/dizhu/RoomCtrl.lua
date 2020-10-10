@@ -14,7 +14,6 @@ function RoomCtrl:ctor()
 	self.frameNo_ = 1
 	self:initialize()
 	self:addEventListeners()
-
 	g.mySched:doLoop(function()
 		if self.onEnterFrame_ then
 			return self:onEnterFrame_()
@@ -53,7 +52,7 @@ function RoomCtrl:onEnterFrame_()
             self.frameNo_ = 1
 			local pack = table.remove(self.packetCache_, 1)
 			self:processPacket_(pack)
-		else					
+		else			
             -- 先检查并干掉累计的超过一局的包
             local removeFromIdx = 0
             local removeEndIdx = 0
@@ -98,13 +97,16 @@ function RoomCtrl:processPacket_(pack)
 	local cmd = pack.cmd
 	if cmd == CmdDef.SVR_ENTER_ROOM then
 		self:enterRoom(pack)
+	elseif cmd == CmdDef.SVR_CAST_USER_SIT then
+		self:castUserSit(pack)
 	end
 end
 
 function RoomCtrl:enterRoom(pack)
 	if pack.ret == 0 then
 		g.Var.level = tonumber(pack.level)
-		
+		pack.mPlayer = self:mPlayerLoginInfo(pack.players, pack.users)
+		seatMgr:initSeats(pack)
 	else 
 		local msg = "unknown error"
 		if pack.ret == 3 then
@@ -124,6 +126,36 @@ function RoomCtrl:enterRoom(pack)
 				g.myApp:enterScene("HallScene")
 			end, 1.5)
 	end
+end
+
+function RoomCtrl:mPlayerLoginInfo(players, users)
+	local mPlayer = {}
+	if type(players) == "table" and (#players) > 0 then
+		for i = 1, #players do
+			if tonumber(g.user:getUid()) == tonumber(players[i].uid) then
+				for k, v in pairs(players[i]) do
+					mPlayer[k] = v
+				end
+			end
+		end
+    end
+    if type(users) == "table" and (#users) > 0 then
+		for i = 1, #users do
+			if tonumber(g.user:getUid()) == tonumber(users[i].uid) then
+				for k, v in pairs(users[i]) do
+					mPlayer[k] = v
+				end
+			end
+		end
+	end
+	roomInfo:setMSeatId(mPlayer.seatId or -1)
+
+	return mPlayer
+end
+
+function RoomCtrl:castUserSit(pack)
+	if not pack then return end
+	seatMgr:castUserSit(pack)
 end
 
 function RoomCtrl:backClick()

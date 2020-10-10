@@ -4,7 +4,7 @@
 --[[
     解包
 ]]
-local HEAD_LEN = 11 -- 包头长度
+local HEAD_LEN = 15 -- 包头长度
 
 local TYPE = import(".PacketDataType")
 local PacketParser = class("PacketParser")
@@ -33,6 +33,7 @@ local function verifyHeadAndGetBodyLenAndCmd(buf)
     buf:setPos(5)
 
     if buf:readStringBytes(2) == "LW" then
+        buf:setPos(11)
         cmd = buf:readInt()
         buf:setPos(1)
         len = buf:readInt() - HEAD_LEN
@@ -245,7 +246,7 @@ end
 function PacketParser:parsePacket_(buf)
     print("[PACK_PARSE] len:" .. buf:getLen() .. "[" .. ByteArray.toString(buf, 16) .. "]")
     local ret = {}
-    local cmd = buf:setPos(7):readInt()
+    local cmd = buf:setPos(11):readInt()
     local config = nil
     config = self.config_[cmd]
     if self.subConfig_ and self.subConfig_[cmd] then

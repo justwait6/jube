@@ -44,6 +44,97 @@ function SeatManager.getInstance()
     return SeatManager.singleInstance
 end
 
+function SeatManager:initSeats(pack)
+    self:initPlayerData(pack)
+    self:initPlayerView(pack)
+end
+
+function SeatManager:initPlayerData(pack)
+	if pack.players then
+        for _, v in pairs(pack.players) do
+            table.insert(self.playerInfo, v)
+        end
+	end
+end
+
+function SeatManager:initPlayerView(pack)
+    local seatOffset = 0
+    for _, v in ipairs(self.playerInfo) do
+         if v.seatId >= 0 and v.seatId <= RoomConst.UserNum - 1 then
+              self:initPlayerViewWithSeatId(v)
+              local fromSeatId = v.seatId
+              local toSeatId = RoomUtil.getFixSeatId(v.seatId) 
+              seatOffset = toSeatId - fromSeatId
+         end
+    end
+    if pack.isReconnect then --房间里重连
+		self:startAllSeatMove(seatOffset, true)
+	else
+        self:startAllSeatMove(seatOffset)
+    end
+end
+
+function SeatManager:initPlayerViewWithSeatId(user)
+    local seatId = user.seatId or -1
+    if seatId >= 0 then
+		local seat = self.seats_[seatId]
+		seat:show()
+		seat:setUid(user.uid or -1)
+		seat:setServerSeatId(seatId)
+        seat:updateSeatConfig()
+        self:updateMoney(seatId, user.carry or user.money or 0)
+		self:updateUserinfo(seat, json.decode(user.userinfo))
+    end
+end
+
+function SeatManager:updateMoney(seatId, money)
+    if seatId and seatId >= 0 and money and money >=0 then
+        local seat = self.seats_[seatId]
+        seat:updateMoney(money)
+    end
+end
+
+function SeatManager:updateUserinfo(seat, userinfo)
+    if userinfo then
+        seat:showHeader()
+        local uid = seat:getUid()
+        seat:setHeaderConfig(userinfo.icon, userinfo.gender)
+        seat:setNickName(userinfo.nickName)
+    end
+end
+
+function SeatManager:startAllSeatMove(seatOffset, isInstant)
+	for i = 0, RoomConst.UserNum - 1 do
+		local seat = self.seats_[i]
+        local fromSeatId = seat:getServerSeatId()
+        if fromSeatId ~= RoomConst.NoPlayerSeatId then
+			seat:show()
+			local toSeatId = fromSeatId + seatOffset
+			if toSeatId < 0 then
+				toSeatId = toSeatId + RoomConst.UserNum
+			elseif toSeatId > RoomConst.UserNum - 1 then
+				toSeatId = toSeatId - RoomConst.UserNum
+			end
+			self:startSeatMove(seat, fromSeatId, toSeatId)
+		else
+			seat:hide()
+		end                  
+	end
+end
+
+function SeatManager:startSeatMove(seat, fromSeatId, toSeatId)
+    if isInstant then
+        self:setToIndexSeat(seat, toSeatId)
+    else
+        self:startMoveSeatAnimation(seat, fromSeatId, toSeatId)
+    end
+end
+
+function SeatManager:setToIndexSeat(seat,toSeatId)
+    seat:pos(P1[toSeatId].x, P1[toSeatId].y)
+    seat:setNowPos(toSeatId)
+end
+
 function SeatManager:startMoveToNotFix()
     for i = 0, RoomConst.UserNum-1 do
         local seat = self.seats_[i]

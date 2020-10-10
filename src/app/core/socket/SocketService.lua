@@ -8,6 +8,7 @@ local SocketService = class("SocketService")
 
 local CmdConfig = require("app.core.protocol.CommandConfig")
 local RummyCmdConfig = require("app.core.protocol.RummyCmdConfig")
+local DizhuCmdConfig = require("app.core.protocol.DizhuCmdConfig")
 
 local SOCKET_ID = 1
 
@@ -38,6 +39,8 @@ function SocketService:setSubCmdConfig(gameId)
     self.subCmdConfig_ = nil
     if gameId == g.SubGameDef.RUMMY then
         self.subCmdConfig_ = RummyCmdConfig
+    elseif gameId == g.SubGameDef.DIZHU then
+        self.subCmdConfig_ = DizhuCmdConfig
     end
     self.parser_:setSubCmdConfig(self.subCmdConfig_)
 end

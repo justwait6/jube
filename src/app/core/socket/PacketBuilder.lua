@@ -5,7 +5,7 @@
     封包
 ]]
 
-local HEAD_LEN = 11
+local HEAD_LEN = 15
 
 local TYPE = import(".PacketDataType")
 require("app.core.util.bit")
@@ -121,6 +121,7 @@ function PacketBuilder:build()
     -- package header, set package length to 0 first
     buf:writeInt(0) -- package length, take 4 bytes
     buf:writeStringBytes("LW") -- "LW", take 2 bytes
+    buf:writeInt(g.Var.gameId) -- gameId, take 4 bytes
     buf:writeInt(self.cmd_) -- command, take 4 bytes
     buf:writeByte(0) -- check code, take 1 byte
 
@@ -132,7 +133,7 @@ function PacketBuilder:build()
         
         -- check code
         local code = self:cbCheckCode(buf)
-        buf:setPos(11)
+        buf:setPos(HEAD_LEN)
         if code then
             buf:writeByte(code)
         end
