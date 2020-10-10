@@ -17,21 +17,20 @@ function HallCtrl:logout()
 	g.myApp:enterScene("LoginScene")
 end
 
-function HallCtrl:getTable()
-	g.mySocket:cliGetTable()
+function HallCtrl:getTable(gameId)
+	g.mySocket:cliGetTable(gameId)
 end
 
 function HallCtrl:onSvrSendHallLogin(pack)
 	if pack and tonumber(pack.ret) == 1 then -- need reconnect room
-		g.Var.gameId = g.userDefault:getIntegerForKey(g.cookieKey.GAME_ID)
-		self:getTable()
+		self:getTable(0)
 	end
 end
 
 function HallCtrl:onGetTableResp(pack)
-	g.userDefault:setIntegerForKey(g.cookieKey.GAME_ID, pack.gameId)
-	g.mySocket:setRoomCmdConfig(pack.gameId)
+	g.Var.gameId = pack.gameId
 	g.Var.tid = pack.tid
+	g.mySocket:setRoomCmdConfig(pack.gameId)
 	if pack.gameId == g.SubGameDef.RUMMY then
 		g.myApp:enterScene("RummyScene")
 	elseif pack.gameId == g.SubGameDef.DIZHU then
@@ -40,13 +39,11 @@ function HallCtrl:onGetTableResp(pack)
 end
 
 function HallCtrl:getDizhuTable()
-	g.Var.gameId = g.SubGameDef.DIZHU
-	self:getTable()
+	self:getTable(g.SubGameDef.DIZHU)
 end
 
 function HallCtrl:getRummyTable()
-	g.Var.gameId = g.SubGameDef.RUMMY
-	self:getTable()
+	self:getTable(g.SubGameDef.RUMMY)
 end
 
 function HallCtrl:XXXX()

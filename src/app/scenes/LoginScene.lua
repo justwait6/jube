@@ -39,6 +39,7 @@ end
 
 function LoginScene:onEnter()
 	g.mySocket:cancelCliConnectHall()
+	g.Var.gameId = g.SubGameDef.NONE
 end
 
 function LoginScene:onExit()

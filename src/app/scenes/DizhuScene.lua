@@ -24,7 +24,7 @@ function DizhuScene:createNodes()
 end
 
 function DizhuScene:onEnter()
-    g.mySocket:cliEnterRoom(g.Var.tid)
+    g.mySocket:cliEnterRoom()
 end
 
 function DizhuScene:onExit()

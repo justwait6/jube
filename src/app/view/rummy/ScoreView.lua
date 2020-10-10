@@ -260,7 +260,7 @@ function ScoreView:updateData(pack)
             :setAnchorPoint(cc.p(0.5, 0.5))
 
         local winMoney = user.winMoney or "0"
-        if g.Var.gameId >= 10000 then
+        if g.myFunc:isGoldGame() then
             winMoney = g.moneyUtil:formatGold(user.winMoney or 0, true)
         end
         display.newTTFLabel({

@@ -46,7 +46,7 @@ function MoneyUtil:formatGold(gold,ifForceGode)
     if LANG == LANG_ID then
         return tonumber(gold)
     else
-        if g.Var.gameId >= 10000 or ifForceGode then --金币场
+        if g.myFunc:isGoldGame() or ifForceGode then --金币场
             gold = tonumber(gold or 0)
             gold = gold / 100
             return tonumber(string.format("%.2f",gold))

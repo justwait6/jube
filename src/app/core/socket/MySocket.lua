@@ -115,20 +115,20 @@ function MySocket:setRoomCmdConfig(gameId)
     end
 end
 
-function MySocket:cliGetTable()
+function MySocket:cliGetTable(gameId)
     local pack = self:createPacketBuilder(CmdDef.CLI_GET_TABLE)
         :setParameter("uid", g.user:getUid())
-        :setParameter("gameId", g.Var.gameId)
+        :setParameter("gameId", gameId)
         :setParameter("level", g.Var.level)
         :build()
     self:send(pack)
 end
 
-function MySocket:cliEnterRoom(tableId)
+function MySocket:cliEnterRoom()
     local pack = self:createPacketBuilder(CmdDef.CLI_ENTER_ROOM)
         :setParameter("uid", g.user:getUid())
         :setParameter("gameId", g.Var.gameId)
-        :setParameter("tid", tableId)
+        :setParameter("tid", g.Var.tid)
         :setParameter("userinfo", g.user:getUserinfo())
         :build()
     self:send(pack)

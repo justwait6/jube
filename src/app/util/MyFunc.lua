@@ -146,4 +146,8 @@ function MyFunc:getTodayTimeStamp()
     return cDateTodayTime
 end
 
+function MyFunc:isGoldGame()
+    return g.Var.gameId >= 10000
+end
+
 return MyFunc

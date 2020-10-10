@@ -24,7 +24,7 @@ function RummyScene:createNodes()
 end
 
 function RummyScene:onEnter()
-    g.mySocket:cliEnterRoom(g.Var.tid)
+    g.mySocket:cliEnterRoom()
 end
 
 function RummyScene:onExit()
