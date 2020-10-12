@@ -103,10 +103,12 @@ function RoomCtrl:processPacket_(pack)
 		self:castUserExit(pack)
 	elseif cmd == CmdDef.SVR_CAST_USER_SIT then
 		self:castUserSit(pack)
-	elseif cmd == CmdDef.SVR_PLAYER_READY then
+	elseif cmd == CmdDef.SVR_DIZHU_READY then
 		self:ready(pack)
-	elseif cmd == CmdDef.SVR_CAST_PLAYER_READY then
+	elseif cmd == CmdDef.SVR_CAST_DIZHU_READY then
 		self:castReady(pack)
+	elseif cmd == CmdDef.SVR_DIZHU_GAME_START then
+		self:gameStart(pack)
 	end
 end
 
@@ -201,6 +203,11 @@ function RoomCtrl:castReady(pack)
 	seatMgr:showReadyText(pack.uid)
 end
 
+function RoomCtrl:gameStart(pack)
+	if not pack then return end
+	seatMgr:doDealCardsAnim(pack.cards)
+end
+
 
 -- 前提: 重连包, 用户在玩(桌子状态在玩)
 function RoomCtrl:simulateReady(pack)
@@ -235,7 +242,7 @@ end
 
 function RoomCtrl:onBeginClick()
 	if g.mySocket:isConnected() then
-		g.mySocket:send(g.mySocket:createPacketBuilder(CmdDef.CLI_PLAYER_READY)
+		g.mySocket:send(g.mySocket:createPacketBuilder(CmdDef.CLI_DIZHU_READY)
 	   :setParameter("uid", g.user:getUid()):build())
 	end
 end

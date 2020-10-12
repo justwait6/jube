@@ -23,7 +23,7 @@ DizhuCmdConfig = {
             {name = "tid", type = T.INT},
         }
     },
-    [C.CLI_PLAYER_READY] = {
+    [C.CLI_DIZHU_READY] = {
         ver = 1,
         fmt = {
             {name = "uid", type = T.INT},
@@ -80,18 +80,29 @@ DizhuCmdConfig = {
             {name="state",type=T.INT},
         }
     },
-    [C.SVR_PLAYER_READY] = {
+    [C.SVR_DIZHU_READY] = {
         ver = 1,
         fmt = {
             {name="ret",type=T.BYTE},
         }
     },
-    [C.SVR_CAST_PLAYER_READY] = {
+    [C.SVR_CAST_DIZHU_READY] = {
         ver = 1,
         fmt = {
             {name="uid",type=T.INT},
         }
     },
+    [C.SVR_DIZHU_GAME_START] = {
+        ver = 1,
+        fmt = {
+            {name="cards",type=T.ARRAY,lengthType=T.BYTE,
+                    fmt = {
+                            {name="card",type=T.BYTE},
+                    },
+            },
+        }
+    },
+    
 }
 
 return DizhuCmdConfig

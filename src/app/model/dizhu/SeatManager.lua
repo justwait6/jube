@@ -91,6 +91,11 @@ function SeatManager:initPlayerViewWithSeatId(user)
     end
 end
 
+function SeatManager:doDealCardsAnim(cards)
+    print("todo, deal cards anim")
+    dump(cards, "get cards")
+end
+
 function SeatManager:showReadyText(uid)
     local seatId = self:querySeatIdByUid(uid)
     local fixSeatId = RoomUtil.getFixSeatId(seatId)
