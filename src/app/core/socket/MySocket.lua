@@ -86,8 +86,8 @@ function MySocket:onConnected()
     -- self.loginTimeoutHandle_ = g.mySched:doDelay(handler(self, self.disconnect), 4)
     
     print("g.Const.SERVER_CHANNEL = %s", g.Const.SERVER_CHANNEL)
-    if tonumber(g.user:getUid()) ~= 0 then
-        self:sendLogin(tonumber(g.user:getUid()), g.Const.version, g.Const.SERVER_CHANNEL, g.Const.SERVER_PLATFORM, g.user:getAccessServerToken())
+    if g.user:getUid() ~= 0 then
+        self:sendLogin(g.user:getUid(), g.Const.version, g.Const.SERVER_CHANNEL, g.Const.SERVER_PLATFORM, g.user:getAccessServerToken())
     else
         local errorMsg = "server login success but uid id == 0"
         -- g.native:umengError(errorMsg)

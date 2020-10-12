@@ -174,7 +174,7 @@ function SeatManager:standUp(uid)
 			self.seats_[i]:standUp()
 		end
 	end
-	if tonumber(uid) == tonumber(g.user:getUid()) then
+	if tonumber(uid) == g.user:getUid() then
 		roomInfo:setMSeatId(-1)
 		roomInfo:clearMCards()
 		self:startMoveToNotFix()

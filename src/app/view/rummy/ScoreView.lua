@@ -182,7 +182,7 @@ function ScoreView:updateData(pack)
         local nickName = user.name or user.uid
 
         local colorCurrent = cc.c3b(0xff, 0xff, 0xff)
-        if tonumber(user.uid) == tonumber(g.user:getUid()) then
+        if tonumber(user.uid) == g.user:getUid() then
             colorCurrent = cc.c3b(0xf8, 0xf1, 0x24)
         end
 

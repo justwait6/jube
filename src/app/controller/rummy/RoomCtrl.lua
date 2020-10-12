@@ -202,7 +202,7 @@ end
 function RoomCtrl:isSelfInGame(curPlayers)
 	if type(curPlayers) ~= "table" or (#curPlayers) <= 0 then return end
 	for i = 1, #curPlayers do
-        if tonumber(curPlayers[i].uid) == tonumber(g.user:getUid()) and tonumber(curPlayers[i].isDrop) ~= 1 then -- 在玩, 没有弃牌
+        if tonumber(curPlayers[i].uid) == g.user:getUid() and tonumber(curPlayers[i].isDrop) ~= 1 then -- 在玩, 没有弃牌
 			return true
 		end
 	end
@@ -213,7 +213,7 @@ function RoomCtrl:mPlayerLoginInfo(players, users)
 	local mPlayer = {}
 	if type(players) == "table" and (#players) > 0 then
 		for i = 1, #players do
-			if tonumber(g.user:getUid()) == tonumber(players[i].uid) then
+			if g.user:getUid() == tonumber(players[i].uid) then
 				for k, v in pairs(players[i]) do
 					mPlayer[k] = v
 				end
@@ -222,7 +222,7 @@ function RoomCtrl:mPlayerLoginInfo(players, users)
     end
     if type(users) == "table" and (#users) > 0 then
 		for i = 1, #users do
-			if tonumber(g.user:getUid()) == tonumber(users[i].uid) then
+			if g.user:getUid() == tonumber(users[i].uid) then
 				for k, v in pairs(users[i]) do
 					mPlayer[k] = v
 				end
@@ -277,7 +277,7 @@ function RoomCtrl:castUserTurn(pack)
 	local name = seatMgr:queryUsernameByUid(pack.uid)
 	local str = string.format(g.lang:getText("RUMMY", "TURN_TO_PLAY_FMT"), (name or pack.uid))
 	roomMgr:playMiddleTips(str)
-	if pack.uid == tonumber(g.user:getUid()) then
+	if pack.uid == g.user:getUid() then
 		-- g.audio:playSound(g.audio.YOUR_TURN)
 		roomMgr:onSelfTurn()
 		roomInfo:resetWhenSelfTurn()
@@ -318,7 +318,7 @@ function RoomCtrl:selfDraw(pack)
 end
 
 function RoomCtrl:castUserDraw(pack)        
-	if tonumber(pack.uid) ~= tonumber(g.user:getUid()) then
+	if tonumber(pack.uid) ~= g.user:getUid() then
 		local name = seatMgr:queryUsernameByUid(uid)
 		roomMgr:playDrawCardTips(name, uid, pack.region)
 		seatMgr:otherDrawCardAnim(pack)
@@ -351,7 +351,7 @@ end
 
 function RoomCtrl:castUserDiscard(pack)
 	if not pack then return end
-	if tonumber(pack.uid) == tonumber(g.user:getUid()) then return end
+	if tonumber(pack.uid) == g.user:getUid() then return end
 	seatMgr:stopCountDown(pack.uid)
 	seatMgr:otherDiscardCardAnim(pack)
 	-- g.audio:playSound(g.Audio.SANGONG_FOLD)
@@ -389,7 +389,7 @@ end
 
 function RoomCtrl:castUserFinish(pack)
     if not pack then return end
-    if tonumber(pack.uid) == tonumber(g.user:getUid()) then return end -- 如果是自己, 返回
+    if tonumber(pack.uid) == g.user:getUid() then return end -- 如果是自己, 返回
     seatMgr:startCountDown(pack.time or 0, pack.uid)
     seatMgr:otherFinishCardAnim(pack)
     print("-- todo, 广播用户finish牌动画")
@@ -419,7 +419,7 @@ function RoomCtrl:castUserDeclare(pack)
     seatMgr:stopCountDown(pack.uid)
     if pack.ret == 0 then -- declare成功
         seatMgr:showFinishSlotCard()
-        if tonumber(pack.uid) ~= tonumber(g.user:getUid())
+        if tonumber(pack.uid) ~= g.user:getUid()
             and #(roomInfo:getMCards() or {}) > 0 then -- 不是自己, 且在玩
             self:simulateNotifyLeftMeDeclare({declareUid = pack.uid, time = pack.time})
         end
@@ -431,7 +431,7 @@ function RoomCtrl:castUserDeclare(pack)
         seatMgr:cardFinishAreaToDiscardArea()
         self:simulateCastUserDrop({uid = pack.uid})
     end
-    if tonumber(pack.uid) == tonumber(g.user:getUid()) then
+    if tonumber(pack.uid) == g.user:getUid() then
         self:simulateSelfDeclare({ret = pack.ret})
     end
 end
@@ -465,7 +465,7 @@ end
 function RoomCtrl:castUserDrop(pack)
     if not pack then return end
     seatMgr:stopCountDown(pack.uid)
-    if tonumber(pack.uid) == tonumber(g.user:getUid()) then
+    if tonumber(pack.uid) == g.user:getUid() then
         self:simulateSelfDrop({ret = 0})
     end
     seatMgr:userDrop(pack)
@@ -484,7 +484,7 @@ function RoomCtrl:gameEndScore(pack)
     local selfIsDrop = false
     if pack.users then
         for _, user in pairs(pack.users) do
-            if user and user.uid and tonumber(user.uid) == tonumber(g.user:getUid()) then
+            if user and user.uid and tonumber(user.uid) == g.user:getUid() then
                 selfHasDeclare = (tonumber(user.isFinishDeclare) == 1)
                 selfIsDrop = (tonumber(user.isDrop) == 1)
             end
@@ -533,7 +533,7 @@ end
 function RoomCtrl:logoutRoom()
 	if g.mySocket:isConnected() then
 		g.mySocket:send(g.mySocket:createPacketBuilder(CmdDef.CLI_EXIT_ROOM)
-	   :setParameter("uid", tonumber(g.user:getUid()))
+	   :setParameter("uid", g.user:getUid())
 	   :setParameter("tid", tonumber(g.Var.tid)):build())
 	end
 end
@@ -562,7 +562,7 @@ end
 function RoomCtrl:sendCliDrawCard(regionId)
 	if g.mySocket:isConnected() then
 		g.mySocket:send(g.mySocket:createPacketBuilder(CmdDef.CLI_RUMMY_DRAW_CARD)
-		:setParameter("uid", tonumber(g.user:getUid()))
+		:setParameter("uid", g.user:getUid())
 		:setParameter("region", regionId) -- 摸牌区域: 0, 新牌堆; 1, 旧牌堆
 		:build())
   	end
@@ -572,7 +572,7 @@ function RoomCtrl:sendCliDiscardCard(cardIdx)
 	local mCards = roomInfo:getMCards()
 	if g.mySocket:isConnected() then
 			g.mySocket:send(g.mySocket:createPacketBuilder(CmdDef.CLI_RUMMY_DISCARD_CARD)
-			:setParameter("uid", tonumber(g.user:getUid()))
+			:setParameter("uid", g.user:getUid())
 			:setParameter("card", mCards[cardIdx])
 			:setParameter("index", cardIdx)
 			:build())
@@ -583,7 +583,7 @@ function RoomCtrl:sendCliFinish(cardIdx)
 	roomInfo:setFinishCardIndex(cardIdx)
 	if g.mySocket:isConnected() then
 		g.mySocket:send(g.mySocket:createPacketBuilder(CmdDef.CLI_RUMMY_FINISH)
-		:setParameter("uid", tonumber(g.user:getUid()))
+		:setParameter("uid", g.user:getUid())
 		:setParameter("card", mCards[cardIdx])
 		:build())
 	end
@@ -591,7 +591,7 @@ end
 function RoomCtrl:sendCliDrop()
 	if g.mySocket:isConnected() then
 		g.mySocket:send(g.mySocket:createPacketBuilder(CmdDef.CLI_RUMMY_DROP)
-		:setParameter("uid", tonumber(g.user:getUid()))
+		:setParameter("uid", g.user:getUid())
 		:build())
 	end
 end
@@ -601,7 +601,7 @@ function RoomCtrl:sendCliDeclare()
 	local mCards = roomInfo:getMCards()
     if g.mySocket:isConnected() then
         local pack = g.mySocket:createPacketBuilder(CmdDef.CLI_RUMMY_DECLARE)
-        pack:setParameter("uid", tonumber(g.user:getUid()))
+        pack:setParameter("uid", g.user:getUid())
         local simuGroups = {}
         for i, group in pairs(groups) do
             simuGroups[i] = {}

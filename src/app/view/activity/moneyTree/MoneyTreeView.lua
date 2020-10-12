@@ -554,7 +554,7 @@ function MoneyTreeView:newStealCoin(params)
         self.curReqCoinMoneyAmount = moneyAmount
         self.curReqCoin = coinButton
         self.curReqCoinField = params.field
-        if tonumber(self:getCurTreeShowUid()) == tonumber(g.user:getUid()) then
+        if tonumber(self:getCurTreeShowUid()) == g.user:getUid() then
             self:requestCollectOwnCoin(params, 
                 handler(self, self.onRequestCollectOwnCoinSucc),
                 handler(self, self.onRequestCollectOwnCoinFail), true)
@@ -1001,7 +1001,7 @@ function MoneyTreeView:newMyInviteItem(itemParams, itemSize, outerId)
     local item = display.newNode()
 
     local itemBgRes = g.Res.moneytree_rankItemBg
-    if tonumber(itemParams.uid) == tonumber(g.user:getUid()) then
+    if tonumber(itemParams.uid) == g.user:getUid() then
         itemBgRes = g.Res.moneytree_rankItemSelfBg
     end
     local itemBg = display.newSprite(itemBgRes):addTo(item)
@@ -1154,7 +1154,7 @@ end
 function MoneyTreeView:onRequestTreeInfoSucc(data)
     local treeUid = data.treeUid
     
-    if tonumber(treeUid) == tonumber(g.user:getUid()) then
+    if tonumber(treeUid) == g.user:getUid() then
         data = {
             treeUid = g.user:getUid(),
             info = {
@@ -1223,7 +1223,7 @@ function MoneyTreeView:onRequestMyTreeInfoSucc(data)
     self.myTreeInfoData = data
     self:showTreeView(g.user:getUid())
     self:updateMyDynamicsPanel(dataDyInfo)
-    if tonumber(self:getCurTreeShowUid()) == tonumber(g.user:getUid()) then
+    if tonumber(self:getCurTreeShowUid()) == g.user:getUid() then
         if dataOwnInfo then
             self:setCanWater(tonumber(dataOwnInfo.isWater) == 1)
         end
@@ -1278,7 +1278,7 @@ function MoneyTreeView:onRequestWaterTreeSucc(data)
     dump(data, "hh")
     local treeUid = data.treeUid
     
-    if tonumber(treeUid) == tonumber(g.user:getUid()) then
+    if tonumber(treeUid) == g.user:getUid() then
         data = {
             treeUid = g.user:getUid(),
             info = {
@@ -1319,7 +1319,7 @@ function MoneyTreeView:onRequestWaterMyTreeSucc(data)
         self:refreshWaterCoin(dataInfo)
     end))
 
-    if dataInfo and tonumber(self:getCurTreeShowUid()) == tonumber(g.user:getUid()) then
+    if dataInfo and tonumber(self:getCurTreeShowUid()) == g.user:getUid() then
         self:setCanWater(tonumber(dataInfo.isWater) == 1)
     end
 end
@@ -1332,7 +1332,7 @@ function MoneyTreeView:refreshWaterCoin(dataInfo)
         str = tonumber(dataInfo.waterMoneyCount or 0) .. "/5"
     end
     self:setCoinFaceString(self.waterCoin, str)
-    if tonumber(self:getCurTreeShowUid()) == tonumber(g.user:getUid()) then
+    if tonumber(self:getCurTreeShowUid()) == g.user:getUid() then
         if tonumber(dataInfo.waterMoney or 0) > 0 then
             self:setCoinButtonEnabled(self.waterCoin, true)
         end
@@ -1491,7 +1491,7 @@ function MoneyTreeView:showTreeView(uid, isReverse)
     -- 创建新的树
     local data = self.otherTreeInfoData
     local isSelf = false
-    if tonumber(uid) == tonumber(g.user:getUid()) then
+    if tonumber(uid) == g.user:getUid() then
         data = self.myTreeInfoData
         isSelf = true
     end
@@ -1506,14 +1506,14 @@ function MoneyTreeView:showTreeView(uid, isReverse)
     end), true)
 
     -- other UIs
-    if self:getCurTreeShowUid() ~= tonumber(g.user:getUid()) then
-        if tonumber(uid) == tonumber(g.user:getUid()) then
+    if self:getCurTreeShowUid() ~= g.user:getUid() then
+        if tonumber(uid) == g.user:getUid() then
             self:showMyTreeOtherUIs()
             self:hideOtherTreeOtherUIs()
         end
     else
         self:stopPlayCoinSrcDescAnimIf()
-        if tonumber(uid) ~= tonumber(g.user:getUid()) then
+        if tonumber(uid) ~= g.user:getUid() then
             self:showOtherTreeOtherUIs()
             self:hideMyTreeOtherUIs()
         end
