@@ -97,8 +97,16 @@ function RoomCtrl:processPacket_(pack)
 	local cmd = pack.cmd
 	if cmd == CmdDef.SVR_ENTER_ROOM then
 		self:enterRoom(pack)
+	elseif cmd == CmdDef.SVR_EXIT_ROOM then
+		self:exitRoom(pack)
+	elseif cmd == CmdDef.SVR_CAST_EXIT_ROOM then
+		self:castUserExit(pack)
 	elseif cmd == CmdDef.SVR_CAST_USER_SIT then
 		self:castUserSit(pack)
+	elseif cmd == CmdDef.SVR_PLAYER_READY then
+		self:ready(pack)
+	elseif cmd == CmdDef.SVR_CAST_PLAYER_READY then
+		self:castReady(pack)
 	end
 end
 
@@ -107,6 +115,8 @@ function RoomCtrl:enterRoom(pack)
 		g.Var.level = tonumber(pack.level)
 		pack.mPlayer = self:mPlayerLoginInfo(pack.players, pack.users)
 		seatMgr:initSeats(pack)
+		roomMgr:updateOperBtns(pack.state)
+		if pack.mPlayer.state == RoomConst.UserState_Ready then self:simulateReady() end
 	else 
 		local msg = "unknown error"
 		if pack.ret == 3 then
@@ -132,7 +142,7 @@ function RoomCtrl:mPlayerLoginInfo(players, users)
 	local mPlayer = {}
 	if type(players) == "table" and (#players) > 0 then
 		for i = 1, #players do
-			if tonumber(g.user:getUid()) == tonumber(players[i].uid) then
+			if g.user:getUid() == tonumber(players[i].uid) then
 				for k, v in pairs(players[i]) do
 					mPlayer[k] = v
 				end
@@ -141,7 +151,7 @@ function RoomCtrl:mPlayerLoginInfo(players, users)
     end
     if type(users) == "table" and (#users) > 0 then
 		for i = 1, #users do
-			if tonumber(g.user:getUid()) == tonumber(users[i].uid) then
+			if g.user:getUid() == tonumber(users[i].uid) then
 				for k, v in pairs(users[i]) do
 					mPlayer[k] = v
 				end
@@ -156,26 +166,6 @@ end
 function RoomCtrl:castUserSit(pack)
 	if not pack then return end
 	seatMgr:castUserSit(pack)
-end
-
-function RoomCtrl:backClick()
-	if RoomConst.isMeInGames then
-		g.myUi.Dialog.new({
-			type = g.myUi.Dialog.Type.NORMAL,
-			text = g.lang:getText("RUMMY", "EXITTIPS"),
-			onConfirm = RoomCtrl.logoutRoom,	
-		}):show()
- 	else
-		RoomCtrl.logoutRoom()
- 	end
-end
-
-function RoomCtrl:logoutRoom()
-	if g.mySocket:isConnected() then
-		g.mySocket:send(g.mySocket:createPacketBuilder(CmdDef.CLI_EXIT_ROOM)
-	   :setParameter("uid", tonumber(g.user:getUid()))
-	   :setParameter("tid", tonumber(g.Var.tid)):build())
-	end
 end
 
 function RoomCtrl:exitRoom(pack)
@@ -196,6 +186,66 @@ end
 function RoomCtrl:castUserExit(pack)
 	if not pack then return end
 	seatMgr:castUserExit(pack)
+end
+
+function RoomCtrl:ready(pack)
+	if not pack then return end
+	if pack.ret == 0 then
+		seatMgr:showReadyText(g.user:getUid())
+		roomMgr:selfReady()
+	end
+end
+
+function RoomCtrl:castReady(pack)
+	if not pack then return end
+	seatMgr:showReadyText(pack.uid)
+end
+
+
+-- 前提: 重连包, 用户在玩(桌子状态在玩)
+function RoomCtrl:simulateReady(pack)
+	local simulatePack = {}
+    simulatePack.ret = 0
+    self:ready(simulatePack)
+end
+
+function RoomCtrl:backClick()
+	if RoomConst.isMeInGames then
+		g.myUi.Dialog.new({
+			type = g.myUi.Dialog.Type.NORMAL,
+			text = g.lang:getText("RUMMY", "EXITTIPS"),
+			onConfirm = RoomCtrl.logoutRoom,	
+		}):show()
+ 	else
+		RoomCtrl.logoutRoom()
+ 	end
+end
+
+function RoomCtrl:logoutRoom()
+	if g.mySocket:isConnected() then
+		g.mySocket:send(g.mySocket:createPacketBuilder(CmdDef.CLI_EXIT_ROOM)
+	   :setParameter("uid", g.user:getUid())
+	   :setParameter("tid", tonumber(g.Var.tid)):build())
+	end
+end
+
+function RoomCtrl:onAddOddsClick()
+	print("todo, add odds")
+end
+
+function RoomCtrl:onBeginClick()
+	if g.mySocket:isConnected() then
+		g.mySocket:send(g.mySocket:createPacketBuilder(CmdDef.CLI_PLAYER_READY)
+	   :setParameter("uid", g.user:getUid()):build())
+	end
+end
+
+function RoomCtrl:XXXX()
+	
+end
+
+function RoomCtrl:XXXX()
+	
 end
 
 function RoomCtrl:XXXX()

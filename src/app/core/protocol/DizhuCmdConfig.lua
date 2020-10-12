@@ -23,6 +23,12 @@ DizhuCmdConfig = {
             {name = "tid", type = T.INT},
         }
     },
+    [C.CLI_PLAYER_READY] = {
+        ver = 1,
+        fmt = {
+            {name = "uid", type = T.INT},
+        }
+    },
 
 
     --[[
@@ -72,6 +78,18 @@ DizhuCmdConfig = {
             {name="gold", type=T.LONG},
             {name="userinfo", type=T.STRING},
             {name="state",type=T.INT},
+        }
+    },
+    [C.SVR_PLAYER_READY] = {
+        ver = 1,
+        fmt = {
+            {name="ret",type=T.BYTE},
+        }
+    },
+    [C.SVR_CAST_PLAYER_READY] = {
+        ver = 1,
+        fmt = {
+            {name="uid",type=T.INT},
         }
     },
 }

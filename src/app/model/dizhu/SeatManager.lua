@@ -10,6 +10,7 @@ local mResDir = "image/dizhu/" -- module resource directory
 
 local RVP = require("app.model.dizhu.RoomViewPosition")
 local P1 = RVP.SeatPosition
+local P2 = RVP.WordPosition
 
 function SeatManager:ctor()
     self.playerInfo = {}
@@ -79,11 +80,28 @@ function SeatManager:initPlayerViewWithSeatId(user)
     if seatId >= 0 then
 		local seat = self.seats_[seatId]
 		seat:show()
-		seat:setUid(user.uid or -1)
-		seat:setServerSeatId(seatId)
+        seat:setUid(user.uid or -1)
+        seat:setServerSeatId(seatId)
         seat:updateSeatConfig()
         self:updateMoney(seatId, user.carry or user.money or 0)
-		self:updateUserinfo(seat, json.decode(user.userinfo))
+        self:updateUserinfo(seat, json.decode(user.userinfo))
+        if user.state == RoomConst.UserState_Ready then
+            self:showReadyText(user.uid)
+        end
+    end
+end
+
+function SeatManager:showReadyText(uid)
+    local seatId = self:querySeatIdByUid(uid)
+    local fixSeatId = RoomUtil.getFixSeatId(seatId)
+    if seatId >= 0 then
+        self.seats_[seatId]:showReadyText(P2[fixSeatId])
+    end
+end
+
+function SeatManager:hideAllReadyText()
+    for _, seat in pairs(self.seats) do
+        seat:hideReadyText()
     end
 end
 

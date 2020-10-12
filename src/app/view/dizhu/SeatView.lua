@@ -5,6 +5,7 @@ end)
 local SeatCtrl = require("app.controller.dizhu.SeatCtrl")
 local RoomConst = require("app.model.dizhu.RoomConst")
 local roomInfo = require("app.model.dizhu.RoomInfo").getInstance()
+
 local mResDir = "image/dizhu/seat/" -- module resource directory
 
 function SeatView:ctor(scene)
@@ -43,6 +44,9 @@ function SeatView:initialize()
     self.countDownNum = display.newTTFLabel({size = 24, text = ""})
         :pos(self.countDownNumBg:getContentSize().width/2 - 8, self.countDownNumBg:getContentSize().height/2)
         :addTo(self.countDownNumBg)
+    
+    -- ready text
+    self.readyText = display.newSprite(mResDir .. "player_ready.png"):addTo(self):hide()
 end
 
 function SeatView:onAvatarClick()
@@ -201,6 +205,14 @@ function SeatView:hideMiniInfoBg()
 	if self.miniInfoNode then self.miniInfoNode:hide() end
 end
 
+function SeatView:showReadyText(pos)
+	if self.readyText then self.readyText:pos(pos.x, pos.y):show() end
+end
+
+function SeatView:hideReadyText()
+	if self.readyText then self.readyText:hide() end
+end
+
 function SeatView:showFoldTxt()
 	if not self.foldTxt then
 		self.foldTxt = display.newTTFLabel({text = g.lang:getText("RUMMY", "FOLDED"), size = 20, color = cc.c3b(0xb4, 0xb3, 0xb3)})
@@ -259,13 +271,10 @@ end
 
 function SeatView:setUState(uState)
     self.uState = uState
-    if self.serverSeatId == roomInfo:getMSeatId() then
-           if uState == RoomConst.USER_PLAY then
-                 RoomConst.isMeInGames = true
-           else
-                 RoomConst.isMeInGames = false
-           end
-    end
+end
+
+function SeatView:getUState()
+    return self.uState
 end
 
 -- 增加换牌功能，抖牌逻辑去掉
@@ -306,6 +315,7 @@ end
 
 function SeatView:clearTable()
     self:hideFoldTxt()
+    self:hideReadyText()
     -- self:hideAwayTxt()
     self:clearSchedule()
 end

@@ -75,4 +75,13 @@ C.SVR_RUMMY_GET_DROP_CARDS              = 0x0419 -- Rummy获取drop牌列表返�
 C.SVR_RUMMY_USER_BACK                   = 0x041B -- Rummy通报"I am back"返回
 --[[ Rummy Server Protocol End --]]
 
+--[[ Dizhu Client Protocol Begin --]]
+C.CLI_PLAYER_READY                      = 0x040C -- Dizhu请求准备
+--[[ Dizhu Client Protocol End --]]
+
+--[[ Dizhu Server Protocol Begin --]]
+C.SVR_PLAYER_READY                      = 0x040D -- Dizhu返回用户准备
+C.SVR_CAST_PLAYER_READY                 = 0x140D -- Dizhu广播用户准备
+--[[ Dizhu Server Protocol End --]]
+
 return CommandDef
