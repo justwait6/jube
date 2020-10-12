@@ -179,7 +179,7 @@ function SeatManager:getChooseDealerFixedPlayers(users, dealerUid)
         local seatId = self:querySeatIdByUid(refinedPlayers[i].uid or -1)
         refinedPlayers[i].fixSeatId = RoomUtil.getFixSeatId(seatId)
 
-        if tonumber(refinedPlayers[i].uid) == g.user:getUid() then
+        if tonumber(refinedPlayers[i].uid) == tonumber(g.user:getUid()) then
             isSelfInPlay = true
         end
         if tonumber(refinedPlayers[i].uid) == tonumber(dealerUid) then
@@ -194,7 +194,7 @@ function SeatManager:getChooseDealerFixedPlayers(users, dealerUid)
         while (true) do
             local user = table.remove(refinedPlayers, 1)
             table.insert(refinedPlayers, user)
-            if tonumber(user.uid) == g.user:getUid() then
+            if tonumber(user.uid) == tonumber(g.user:getUid()) then
                 break
             end
         end
@@ -250,7 +250,7 @@ function SeatManager:initInfoCardsNode(dropCard, needAnim)
         :onClick(handler(self, function(sender)
             if g.mySocket:isConnected() then
                 g.mySocket:send(g.mySocket:createPacketBuilder(CmdDef.CLI_RUMMY_GET_DROP_CARDS)
-                    :setParameter("uid", g.user:getUid()):build())
+                    :setParameter("uid", tonumber(g.user:getUid())):build())
             end
         end))
         :addTo(iNode)
@@ -1061,7 +1061,7 @@ function SeatManager:uploadGroups(groups, newDrawCardPos)
     local mCards = roomInfo:getMCards()
     if g.mySocket:isConnected() then
         local pack = g.mySocket:createPacketBuilder(CmdDef.CLI_RUMMY_UPLOAD_GROUPS)
-        pack:setParameter("uid", g.user:getUid())
+        pack:setParameter("uid", tonumber(g.user:getUid()))
         local simuGroups = {}
         for i, group in pairs(groups) do
             simuGroups[i] = {}
@@ -1226,7 +1226,7 @@ function SeatManager:standUp(uid)
 			self.seats_[i]:standUp()
 		end
 	end
-	if tonumber(uid) == g.user:getUid() then
+	if tonumber(uid) == tonumber(g.user:getUid()) then
 		roomInfo:setMSeatId(-1)
 		roomInfo:clearMCards()
 		self:startMoveToNotFix()  
@@ -1320,7 +1320,7 @@ function SeatManager:inGameReconnectInfo(pack)
     if type(pack.users) == "table" then
         for _, user in pairs(pack.users) do
             if user and tonumber(user.isDrop) == 1 then
-                if tonumber(user.uid) == g.user:getUid() then
+                if tonumber(user.uid) == tonumber(g.user:getUid()) then
                     self:selfDrop({uid = user.uid})
                 end
                 self:userDrop({uid = user.uid})
