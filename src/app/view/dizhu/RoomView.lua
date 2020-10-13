@@ -34,6 +34,12 @@ function RoomView:initialize()
         :pos(display.left + 53, display.top - 55)
 		:addTo(self.scene.nodes.bgNode)
 
+
+		g.myUi.ScaleButton.new({normal = g.Res.commonroom_back})
+		:onClick(handler(self.ctrl, self.ctrl.vggTest))
+	   :pos(display.left + 53, display.top - 155)
+	   :addTo(self.scene.nodes.bgNode)
+
 	self.ctrl:initRoomNode(self.scene.nodes.roomNode)
 	self.ctrl:initSeatNode(self.scene.nodes.seatNode)
 	self.ctrl:initAnimNode(self.scene.nodes.animNode)

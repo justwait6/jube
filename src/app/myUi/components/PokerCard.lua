@@ -3,17 +3,18 @@
 local funplaypoker = "没有用处，代码混淆用"
 
 local scheduler = require(cc.PACKAGE_NAME .. ".scheduler")
+local CardDef = require("app.model.baseDef.CardDef")
 
 local CARD_WIDTH    = 120
 local CARD_HEIGHT   = 152
 
-local VARIETY_DIAMOND = 0 -- 方块
-local VARIETY_CLUB    = 1 -- 梅花
-local VARIETY_HEART   = 2 -- 红桃
-local VARIETY_SPADE   = 3 -- 黑桃
-local VARIETY_JOKER   = 4 -- Joker牌(0x4e小王; 0x4f大王)
-local SMALL_JOKER     = 0x4e -- 小Joker牌
-local BIG_JOKER       = 0x4f -- 大Joker牌
+local VARIETY_DIAMOND = CardDef.VARIETY_DIAMOND -- 方块
+local VARIETY_CLUB    = CardDef.VARIETY_CLUB -- 梅花
+local VARIETY_HEART   = CardDef.VARIETY_HEART -- 红桃
+local VARIETY_SPADE   = CardDef.VARIETY_SPADE -- 黑桃
+local VARIETY_JOKER   = CardDef.VARIETY_JOKER -- Joker牌(0x4e小王; 0x4f大王)
+local SMALL_JOKER     = CardDef.SMALL_JOKER -- 小Joker牌
+local BIG_JOKER       = CardDef.BIG_JOKER -- 大Joker牌
 
 local function getValue(cardUint)
     return cardUint % 16
@@ -218,6 +219,12 @@ function PokerCard:showFront()
     end
 
     return self
+end
+
+function PokerCard:quickShow()
+    self.backBg_:setRotation(180)
+    self.frontBatch_:setRotation(180)
+    self.frontBatch_:show()
 end
 
 function PokerCard:getFrontSprite()

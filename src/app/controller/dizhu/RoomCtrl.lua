@@ -205,6 +205,7 @@ end
 
 function RoomCtrl:gameStart(pack)
 	if not pack then return end
+	seatMgr:clearTable()
 	seatMgr:doDealCardsAnim(pack.cards)
 end
 
@@ -261,6 +262,15 @@ end
 
 function RoomCtrl:XXXX()
 	
+end
+
+function RoomCtrl:vggTest()
+	print("todo, test function")
+	local testSim_ = {
+		cards = {9, 23, 13, 42, 43, 45, 3, 54, 35, 29, 28, 41, 37, 36, 25, 51, 18,},
+		cmd = 5281,
+	}
+	self:gameStart(testSim_)
 end
 
 function RoomCtrl:dispose()

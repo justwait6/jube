@@ -91,9 +91,63 @@ function SeatManager:initPlayerViewWithSeatId(user)
     end
 end
 
+local CARD_GAP = 40
 function SeatManager:doDealCardsAnim(cards)
-    print("todo, deal cards anim")
-    dump(cards, "get cards")
+    g.myFunc:safeRemoveNode(self.mCardLayer)
+    local layer = ccui.Layout:create()
+    self.mCardLayer = layer
+    layer:setContentSize(cc.size(300, 300))
+    layer:setPosition(cc.p(display.cx, display.cy + 30))
+    layer:setAnchorPoint(cc.p(0.5, 0.5))
+    self.sceneAnimNode_:addChild(layer)
+
+    local HAND_CARD_COUNT = #cards
+    self.cardlist_ = {}
+    for i = 1, HAND_CARD_COUNT do
+        self.cardlist_[i] = g.myUi.PokerCard.new():setCard(cards[i]):addTo(layer)
+        self.cardlist_[i]:showBack()
+    end
+    local cardAnim = function(initPos, gapTime, showInitBack, finishCb)
+        for i = 1, HAND_CARD_COUNT do
+            self.cardlist_[i]:setCard(cards[i])
+            local card = self.cardlist_[i]
+            if showInitBack then
+                card:showBack()
+            end
+            card:stopAllActions()
+            card:setVisible(true)
+            card:setPosition(initPos.x, initPos.y)
+            card:setRotation(0)
+            card:runAction(cc.Sequence:create({
+                cc.DelayTime:create(i * gapTime),
+                cc.MoveTo:create(0.5, cc.p(layer:getContentSize().width/2 + (i - 1) * CARD_GAP - (HAND_CARD_COUNT - 1) * CARD_GAP / 2, 0)),
+                cc.CallFunc:create(function()
+                    card:showFront()
+                    if i == HAND_CARD_COUNT and finishCb then finishCb() end
+                end),
+                }))
+        end
+    end
+    local cardAnim2 = function(finishCb)
+        for i = 1, HAND_CARD_COUNT do
+            local card = self.cardlist_[i]
+            card:stopAllActions()
+            card:setVisible(true)
+            card:setRotation(0)
+            card:runAction(cc.Sequence:create({
+                cc.DelayTime:create(0.2),
+                cc.MoveTo:create(0.2, cc.p(layer:getContentSize().width/2, 0)),
+                cc.CallFunc:create(function()
+                    card:showFront()
+                    if i == HAND_CARD_COUNT and finishCb then finishCb() end
+                end),
+                }))
+        end
+    end
+    cardAnim(cc.p(layer:getContentSize().width/2, layer:getContentSize().height/2), 0.04, true, function()
+        table.sort(cards, function(a, b) return not RoomUtil.sortCard(a, b) end)
+        cardAnim2(function() cardAnim(cc.p(layer:getContentSize().width/2, 0), 0, false) end)
+    end)
 end
 
 function SeatManager:showReadyText(uid)
@@ -105,7 +159,7 @@ function SeatManager:showReadyText(uid)
 end
 
 function SeatManager:hideAllReadyText()
-    for _, seat in pairs(self.seats) do
+    for _, seat in pairs(self.seats_) do
         seat:hideReadyText()
     end
 end
@@ -289,11 +343,16 @@ function SeatManager:clearAll()
     self.seats_ = {}
 end
 
+function SeatManager:clearMCardsArea()
+    g.myFunc:safeRemoveNode(self.mCardLayer)
+end
+
 function SeatManager:clearTable()
     for i = 0, RoomConst.UserNum - 1 do
         self.seats_[i]:clearTable()
     end
     self:clearMCardsArea()
+    self:hideAllReadyText()
 end
 
 function SeatManager:XXXX()
