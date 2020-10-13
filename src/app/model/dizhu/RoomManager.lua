@@ -31,7 +31,8 @@ function RoomManager:initRoomNode(sceneRoomNode)
     self.sceneRoomNode_ = sceneRoomNode
 
 	-- operate btns
-	self:initOperBtn()
+    self:initOperBtn()
+    self:initDizhuArea()
 end
 
 function RoomManager.getInstance()
@@ -59,6 +60,49 @@ function RoomManager:initOperBtn()
         :setSwallowTouches(false)
     self.beginBtn:setButtonLabel(display.newSprite(mResDir .. "buttons/begin.png"))
 	table.insert(self.operBtns, self.beginBtn)
+end
+
+local dizhuBarNum = {}
+dizhuBarNum["0"] = mResDir .. "/number/number0.png"
+dizhuBarNum["1"] = mResDir .. "/number/number1.png"
+dizhuBarNum["2"] = mResDir .. "/number/number2.png"
+dizhuBarNum["3"] = mResDir .. "/number/number3.png"
+dizhuBarNum["4"] = mResDir .. "/number/number4.png"
+dizhuBarNum["5"] = mResDir .. "/number/number5.png"
+dizhuBarNum["6"] = mResDir .. "/number/number6.png"
+dizhuBarNum["7"] = mResDir .. "/number/number7.png"
+dizhuBarNum["8"] = mResDir .. "/number/number8.png"
+dizhuBarNum["9"] = mResDir .. "/number/number9.png"
+function RoomManager:initDizhuArea()
+    self.dizhuBarNode = display.newNode():pos(display.cx, display.top):addTo(self.sceneRoomNode_)
+    display.newSprite(mResDir .. "dizhuBar/dizhu_bottom_card_bg.png")
+        :setAnchorPoint(cc.p(0.5, 1))
+        :addTo(self.dizhuBarNode)
+    display.newSprite(mResDir .. "dizhuBar/base_tag.png")
+        :pos(-168, -26)
+        :addTo(self.dizhuBarNode)
+    self.baseNum_ = g.myUi.NumberImage.new(dizhuBarNum)
+    :setAnchorPoint(cc.p(0.5, 0.5))
+    :pos(-168, -46)
+    :setNumber("1234", -6) -- todo
+    :addTo(self.dizhuBarNode)
+    display.newSprite(mResDir .. "dizhuBar/multiple_tag.png")
+        :pos(168, -26)
+        :addTo(self.dizhuBarNode)
+    self.betOdds_ = g.myUi.NumberImage.new(dizhuBarNum)
+        :setAnchorPoint(cc.p(0.5, 0.5))
+        :pos(168, -46)
+        :setNumber("5678", -6) -- todo
+        :addTo(self.dizhuBarNode)
+    local gap = 60
+    self.dizhuCards = {}
+    for i = 1, RoomConst.LEFT_DIZHU_CARD_NUM do
+        local x = (i - 1) * gap - (RoomConst.LEFT_DIZHU_CARD_NUM - 1) * gap/2
+        self.dizhuCards[i] = g.myUi.PokerCard.new():pos(x, -42):addTo(self.dizhuBarNode):scale(0.4)
+        self.dizhuCards[i]:showBack()
+    end
+    self.initOddsMark = display.newSprite(mResDir .. "dizhuBar/mulMark2.png")
+        :pos(0, -60):addTo(self.dizhuBarNode):hide()
 end
 
 function RoomManager:updateOperBtns(tableState)
