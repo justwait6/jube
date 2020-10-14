@@ -16,6 +16,7 @@ function RoomUtil.getFixSeatId(seatId)
      return fixSeatId
 end
 
+-- Compare single card, a < b returns 1, a = b returns 0, a > b returns -1
 function RoomUtil.compareCard(a, b)
     -- if has joker card
     if a == CardDef.SMALL_JOKER or a == CardDef.BIG_JOKER or b == CardDef.SMALL_JOKER or b == CardDef.BIG_JOKER then
@@ -28,8 +29,8 @@ function RoomUtil.compareCard(a, b)
     -- if card value equal
     if a % 16 == b % 16 then return 0 end
     -- if not has joker card and has 2 card
-    if (a % 16 == 2) then return 1 end
-    if (b % 16 == 2) then return -1 end
+    if (a % 16 == 2) then return -1 end
+    if (b % 16 == 2) then return 1 end
     if (a % 16 < b % 16) then return 1 end
     if (a % 16 > b % 16) then return -1 end
 end

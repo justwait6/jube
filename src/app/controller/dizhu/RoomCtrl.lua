@@ -109,6 +109,14 @@ function RoomCtrl:processPacket_(pack)
 		self:castReady(pack)
 	elseif cmd == CmdDef.SVR_DIZHU_GAME_START then
 		self:gameStart(pack)
+	elseif cmd == CmdDef.SVR_DIZHU_GRAB_TURN then
+		self:grabTurn(pack)
+	elseif cmd == CmdDef.SVR_DIZHU_GRAB then
+		self:grab(pack)
+	elseif cmd == CmdDef.SVR_CAST_DIZHU_GRAB then
+		self:castGrab(pack)
+	elseif cmd == CmdDef.SVR_DIZHU_GRAB_RESULT then
+		self:castGrabResult(pack)
 	end
 end
 
@@ -193,14 +201,14 @@ end
 function RoomCtrl:ready(pack)
 	if not pack then return end
 	if pack.ret == 0 then
-		seatMgr:showReadyText(g.user:getUid())
+		seatMgr:doReady(g.user:getUid())
 		roomMgr:selfReady()
 	end
 end
 
 function RoomCtrl:castReady(pack)
 	if not pack then return end
-	seatMgr:showReadyText(pack.uid)
+	seatMgr:doCastReady(pack.uid)
 end
 
 function RoomCtrl:gameStart(pack)
@@ -209,6 +217,38 @@ function RoomCtrl:gameStart(pack)
 	seatMgr:doDealCardsAnim(pack.cards)
 end
 
+function RoomCtrl:grabTurn(pack)
+	if not pack then return end
+	seatMgr:startCountDown(pack.time, pack.uid)
+	if pack.uid == g.user:getUid() then
+		seatMgr:hideWordText(g.user:getUid())
+		roomMgr:doWhenGrabTurn(pack.odds)
+	else
+		roomMgr:hideGrabBtns(pack.odds)
+	end
+end
+
+function RoomCtrl:grab(pack)
+	if not pack then return end
+	if pack.ret == 0 then
+		seatMgr:doGrab(pack.isGrab, pack.odds)
+		roomMgr:hideGrabBtns(pack.odds)
+	end
+end
+
+function RoomCtrl:castGrab(pack)
+	if not pack then return end
+	seatMgr:doCastGrab(pack.uid, pack.isGrab, pack.odds)
+end
+
+function RoomCtrl:castGrabResult(pack)
+	if not pack then return end
+	roomMgr:updateDizhuArea(pack.cards, pack.odds)
+	seatMgr:doGrabResult(pack.uid)
+	if pack.uid == g.user:getUid() then
+		seatMgr:insertCardsAnim(pack.cards)
+	end
+end
 
 -- 前提: 重连包, 用户在玩(桌子状态在玩)
 function RoomCtrl:simulateReady(pack)
@@ -248,8 +288,20 @@ function RoomCtrl:onBeginClick()
 	end
 end
 
-function RoomCtrl:XXXX()
-	
+function RoomCtrl:onGrabClick()
+	self:cliSendGrab(1)
+end
+
+function RoomCtrl:onNoGrabClick()
+	self:cliSendGrab(0)
+end
+
+function RoomCtrl:cliSendGrab(isGrab)
+	if g.mySocket:isConnected() then
+		g.mySocket:send(g.mySocket:createPacketBuilder(CmdDef.CLI_DIZHU_GRAB)
+	   :setParameter("uid", g.user:getUid())
+	   :setParameter("isGrab", isGrab):build())
+	end
 end
 
 function RoomCtrl:XXXX()
@@ -267,10 +319,21 @@ end
 function RoomCtrl:vggTest()
 	print("todo, test function")
 	local testSim_ = {
-		cards = {9, 23, 13, 42, 43, 45, 3, 54, 35, 29, 28, 41, 37, 36, 25, 51, 18,},
+		cards = {9, 23, 13, 42, 43, 45, 5, 54, 38, 29, 28, 41, 37, 38, 25, 57, 18,},
 		cmd = 5281,
 	}
 	self:gameStart(testSim_)
+end
+
+function RoomCtrl:vggTest2()
+	print("todo, test function")
+	local testSim_ = {
+		cards = {3, 4, 25,},
+		cmd = 5283,
+		odds = 3,
+		uid = 1,
+	}
+	self:castGrabResult(testSim_)
 end
 
 function RoomCtrl:dispose()

@@ -29,7 +29,13 @@ DizhuCmdConfig = {
             {name = "uid", type = T.INT},
         }
     },
-
+    [C.CLI_DIZHU_GRAB] = {
+        ver = 1,
+        fmt = {
+            {name = "uid", type = T.INT},
+            {name = "isGrab", type = T.BYTE},
+        }
+    },
 
     --[[
         服务器包
@@ -102,7 +108,42 @@ DizhuCmdConfig = {
             },
         }
     },
-    
+    [C.SVR_DIZHU_GRAB_TURN] = {
+        ver = 1,
+        fmt = {
+            {name="uid",type=T.INT},
+            {name="odds",type=T.INT},
+            {name="time",type=T.INT},
+        }
+    },
+    [C.SVR_DIZHU_GRAB_RESULT] = {
+        ver = 1,
+        fmt = {
+            {name="uid",type=T.INT},
+            {name="odds",type=T.INT},
+            {name="cards",type=T.ARRAY,lengthType=T.BYTE,
+                    fmt = {
+                            {name="card",type=T.BYTE},
+                    },
+            },
+        }
+    },
+    [C.SVR_DIZHU_GRAB] = {
+        ver = 1,
+        fmt = {
+            {name = "ret", type = T.BYTE},
+            {name = "isGrab", type = T.BYTE, depends = function(ctx) return ctx.ret == 0 end},
+            {name = "odds", type = T.INT, depends = function(ctx) return ctx.ret == 0 end},
+        }
+    },
+    [C.SVR_CAST_DIZHU_GRAB] = {
+        ver = 1,
+        fmt = {
+            {name = "uid", type = T.INT},
+            {name = "isGrab", type = T.BYTE},
+            {name = "odds", type = T.INT},
+        }
+    },
 }
 
 return DizhuCmdConfig

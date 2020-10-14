@@ -43,13 +43,13 @@ function RoomManager.getInstance()
 end
 
 function RoomManager:initOperBtn()
-    self.addOddsBtn = g.myUi.ScaleButton.new({normal = mResDir .. "buttons/bt_green_bg.png"})
+    self.cardsSeenBtn = g.myUi.ScaleButton.new({normal = mResDir .. "buttons/bt_green_bg.png"})
 	:onClick(handler(self.roomCtrl_, self.roomCtrl_.onAddOddsClick))
 		:addTo(self.sceneRoomNode_)
 		:pos(P[0].x, P[0].y)
 		:hide()
         :setSwallowTouches(false)
-    self.addOddsBtn:setButtonLabel(display.newSprite(mResDir .. "buttons/orange_visible_cards_mul5.png"))
+    self.cardsSeenBtn:setButtonLabel(display.newSprite(mResDir .. "buttons/orange_visible_cards_mul5.png"))
     table.insert(self.operBtns, self.beginBtn)
 
     self.beginBtn = g.myUi.ScaleButton.new({normal = mResDir .. "buttons/bt_orange_bg.png"})
@@ -59,7 +59,25 @@ function RoomManager:initOperBtn()
 		:hide()
         :setSwallowTouches(false)
     self.beginBtn:setButtonLabel(display.newSprite(mResDir .. "buttons/begin.png"))
-	table.insert(self.operBtns, self.beginBtn)
+    table.insert(self.operBtns, self.beginBtn)
+    
+    self.noGrabBtn = g.myUi.ScaleButton.new({normal = mResDir .. "buttons/bt_green_bg.png"})
+	:onClick(handler(self.roomCtrl_, self.roomCtrl_.onNoGrabClick))
+		:addTo(self.sceneRoomNode_)
+		:pos(P[2].x, P[2].y)
+		:hide()
+        :setSwallowTouches(false)
+    self.noGrabBtn:setButtonLabel(display.newSprite(mResDir .. "buttons/green_pass_call.png"))
+    table.insert(self.operBtns, self.noGrabBtn)
+
+    self.grabBtn = g.myUi.ScaleButton.new({normal = mResDir .. "buttons/bt_orange_bg.png"})
+	:onClick(handler(self.roomCtrl_, self.roomCtrl_.onGrabClick))
+		:addTo(self.sceneRoomNode_)
+		:pos(P[3].x, P[3].y)
+		:hide()
+        :setSwallowTouches(false)
+    self.grabBtn:setButtonLabel(display.newSprite(mResDir .. "buttons/orange_call_landlord.png"))
+    table.insert(self.operBtns, self.grabBtn)
 end
 
 local dizhuBarNum = {}
@@ -101,19 +119,56 @@ function RoomManager:initDizhuArea()
         self.dizhuCards[i] = g.myUi.PokerCard.new():pos(x, -42):addTo(self.dizhuBarNode):scale(0.4)
         self.dizhuCards[i]:showBack()
     end
-    self.initOddsMark = display.newSprite(mResDir .. "dizhuBar/mulMark2.png")
-        :pos(0, -60):addTo(self.dizhuBarNode):hide()
+end
+
+function RoomManager:updateDizhuArea(cards, odds)
+    for i = 1, RoomConst.LEFT_DIZHU_CARD_NUM do
+        self.dizhuCards[i]:setCard(cards[i])
+        self.dizhuCards[i]:stopAllActions()
+        self.dizhuCards[i]:runAction(cc.Sequence:create({
+            cc.DelayTime:create(0.01 * i),
+            cc.CallFunc:create(function()
+                self.dizhuCards[i]:flip(0.1)
+            end),
+            cc.DelayTime:create(0.2),
+            cc.CallFunc:create(function()
+                if (i == RoomConst.LEFT_DIZHU_CARD_NUM) then
+                    g.myFunc:safeRemoveNode(self.initOddsMark)
+                    self.initOddsMark = display.newSprite(mResDir .. "dizhuBar/mulMark" .. (odds + 1) .. ".png")
+                        :pos(0, -60):addTo(self.dizhuBarNode)
+                end
+            end)
+        }))
+    end
 end
 
 function RoomManager:updateOperBtns(tableState)
     if tableState == RoomConst.TState_NotPlay then
-        self.addOddsBtn:show()
+        self.cardsSeenBtn:show()
         self.beginBtn:show()
     end
 end
+
 function RoomManager:selfReady()
-    self.addOddsBtn:hide()
+    self.cardsSeenBtn:hide()
     self.beginBtn:hide()
+end
+
+function RoomManager:doWhenGrabTurn(odds)
+    if odds < 1 then
+        self.noGrabBtn:setButtonLabel(display.newSprite(mResDir .. "buttons/green_pass_call.png"))
+        self.grabBtn:setButtonLabel(display.newSprite(mResDir .. "buttons/orange_call_landlord.png"))
+    else
+        self.noGrabBtn:setButtonLabel(display.newSprite(mResDir .. "buttons/green_pass_grab.png"))
+        self.grabBtn:setButtonLabel(display.newSprite(mResDir .. "buttons/orange_grab_landlord.png"))
+    end
+    self.noGrabBtn:show()
+    self.grabBtn:show()
+end
+
+function RoomManager:hideGrabBtns()
+    self.noGrabBtn:hide()
+    self.grabBtn:hide()
 end
 
 function RoomManager:clearAll()

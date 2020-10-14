@@ -213,6 +213,16 @@ function SeatView:hideReadyText()
 	if self.readyText then self.readyText:hide() end
 end
 
+function SeatView:showWordText(pos, res)
+    g.myFunc:safeRemoveNode(self.wordText)
+    self.wordText = display.newSprite(res):pos(pos.x, pos.y):addTo(self)
+	if self.wordText then self.wordText:pos(pos.x, pos.y):show() end
+end
+
+function SeatView:hideWordText()
+	if self.wordText then self.wordText:hide() end
+end
+
 function SeatView:showFoldTxt()
 	if not self.foldTxt then
 		self.foldTxt = display.newTTFLabel({text = g.lang:getText("RUMMY", "FOLDED"), size = 20, color = cc.c3b(0xb4, 0xb3, 0xb3)})
@@ -316,6 +326,7 @@ end
 function SeatView:clearTable()
     self:hideFoldTxt()
     self:hideReadyText()
+    self:hideWordText()
     -- self:hideAwayTxt()
     self:clearSchedule()
 end

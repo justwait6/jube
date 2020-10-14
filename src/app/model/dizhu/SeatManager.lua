@@ -10,7 +10,9 @@ local mResDir = "image/dizhu/" -- module resource directory
 
 local RVP = require("app.model.dizhu.RoomViewPosition")
 local P1 = RVP.SeatPosition
-local P2 = RVP.WordPosition
+local P2 = RVP.ReadyPosition
+local P3 = RVP.WordPosition
+local P4 = RVP.DizhuIconPosition
 
 function SeatManager:ctor()
     self.playerInfo = {}
@@ -150,6 +152,75 @@ function SeatManager:doDealCardsAnim(cards)
     end)
 end
 
+function SeatManager:doGrabResult(uid)
+    self:doShowDizhuIcon(uid)
+    self:hideAllWordText()
+end
+
+function SeatManager:doShowDizhuIcon(uid)
+    g.myFunc:safeRemoveNode(self.dizhuIcon_)
+    self.dizhuIcon_ = display.newSprite(mResDir .. "lord_icon.png"):opacity(0)
+        :pos(display.cx, display.cy)
+        :addTo(self.sceneAnimNode_)
+    local seatId = self:querySeatIdByUid(uid)
+    local fixSeatId = RoomUtil.getFixSeatId(seatId)
+    if seatId >= 0 then
+        self.dizhuIcon_:stopAllActions()
+        self.dizhuIcon_:runAction(cc.Sequence:create({
+            cc.Spawn:create({
+                cc.FadeIn:create(0.5),
+                cc.MoveTo:create(0.5, P4[fixSeatId])
+            })
+        }))
+    end
+end
+
+function SeatManager:insertCardsAnim(cards)
+    if not self.cardlist_ then return end
+    table.sort(cards, function(a, b) return not RoomUtil.sortCard(a, b) end)
+    local cardList = {}
+    local newCards = {}
+    for i = 1, #cards do
+        newCards[i] = g.myUi.PokerCard.new():setCard(cards[i]):pos(0, 40):addTo(self.mCardLayer)
+        newCards[i]:showFront()
+    end
+    local idx = 1
+    for i = 1, #self.cardlist_ do
+        if idx <= #cards then
+            if (RoomUtil.compareCard(cards[idx], self.cardlist_[i]:getCard()) <= 0) then
+                table.insert(cardList, newCards[idx])
+                idx = idx + 1
+            end
+        end
+        table.insert(cardList, self.cardlist_[i])
+        if i == #self.cardlist_ and idx <= #cards then
+            for j = idx, #cards do
+                table.insert(cardList, newCards[j])
+            end
+        end
+    end
+    local midX = self.mCardLayer:getContentSize().width/2
+    dump(cardList, "cardList")
+    local cardCnt = #self.cardlist_ + #cards
+    for i = 1, cardCnt do
+        cardList[i]:setPositionX(midX + (i - 1) * CARD_GAP - (cardCnt - 1) * CARD_GAP / 2)
+        cardList[i]:setLocalZOrder(i)
+    end
+    for i = 1, #newCards do
+        newCards[i]:stopAllActions()
+        newCards[i]:runAction(cc.Sequence:create({
+            cc.DelayTime:create(1),
+            cc.MoveTo:create(0.5, cc.p(newCards[i]:getPositionX(), 0)),
+        }))
+    end
+    self.cardList_ = cardList
+end
+function SeatManager:doReady(uid)
+    self:showReadyText(uid)
+end
+function SeatManager:doCastReady(uid)
+    self:showReadyText(uid)
+end
 function SeatManager:showReadyText(uid)
     local seatId = self:querySeatIdByUid(uid)
     local fixSeatId = RoomUtil.getFixSeatId(seatId)
@@ -161,6 +232,82 @@ end
 function SeatManager:hideAllReadyText()
     for _, seat in pairs(self.seats_) do
         seat:hideReadyText()
+    end
+end
+
+function SeatManager:doGrab(isGrab, odds)
+    self:doUserGrab(g.user:getUid(), isGrab, odds)
+end
+
+function SeatManager:doCastGrab(uid, isGrab, odds)
+    self:doUserGrab(uid, isGrab, odds)
+end
+
+function SeatManager:doUserGrab(uid, isGrab, odds)
+    printVgg("doUserGrab", uid, isGrab, odds)
+    self:stopCountDown(uid)
+    local wordRes = nil
+    if isGrab == 1 and odds <= 1 then
+        wordRes = mResDir .. "player_call_landlord.png"
+        print("todo, jiao di zhu...")
+    elseif isGrab == 1 and odds > 1 then
+        wordRes = mResDir .. "player_grab_landlord.png"
+        print("todo, qiang di zhu...")
+    elseif isGrab == 0 and odds < 1 then
+        wordRes = mResDir .. "player_pass_1.png"
+        print("todo, no call 1...")
+    elseif isGrab == 0 and odds >= 1 then
+        wordRes = mResDir .. "player_pass_2.png"
+        print("todo, no call 2...")
+    end
+    printVgg("wordRes", wordRes)
+    self:showWordText(uid, wordRes)
+end
+
+function SeatManager:showWordText(uid, wordRes)
+    local seatId = self:querySeatIdByUid(uid)
+    local fixSeatId = RoomUtil.getFixSeatId(seatId)
+    if seatId >= 0 then
+        self.seats_[seatId]:showWordText(P3[fixSeatId], wordRes)
+    end
+end
+
+function SeatManager:hideWordText(uid)
+    local seatId = self:querySeatIdByUid(uid)
+    local fixSeatId = RoomUtil.getFixSeatId(seatId)
+    if seatId >= 0 then
+        self.seats_[seatId]:hideWordText()
+    end
+end
+
+function SeatManager:hideAllWordText()
+    for _, seat in pairs(self.seats_) do
+        seat:hideWordText()
+    end
+end
+
+function SeatManager:startCountDown(time,uid,finishCallback)
+    local seatId = self:querySeatIdByUid(uid)
+    if seatId and seatId >=0 then
+        local seat = self.seats_[seatId]
+        seat:startCountDown(time,function()
+            if seat and seatId == roomInfo:getMSeatId() then
+                 seat:stopShakeCard()
+            end
+            if finishCallback then
+                 finishCallback()
+            end
+        end)
+    end
+end
+
+function SeatManager:stopCountDown(uid)
+    local seatId = self:querySeatIdByUid(uid)
+    if seatId and seatId >=0 then
+        local seat = self.seats_[seatId]
+        if seat then
+            seat:stopCountDown()
+        end
     end
 end
 
@@ -353,6 +500,7 @@ function SeatManager:clearTable()
     end
     self:clearMCardsArea()
     self:hideAllReadyText()
+    self:hideAllWordText()
 end
 
 function SeatManager:XXXX()
