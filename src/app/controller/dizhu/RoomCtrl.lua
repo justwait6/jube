@@ -319,7 +319,7 @@ end
 function RoomCtrl:vggTest()
 	print("todo, test function")
 	local testSim_ = {
-		cards = {9, 23, 13, 42, 43, 45, 5, 54, 38, 29, 28, 41, 37, 38, 25, 57, 18,},
+		cards = {7, 23, 21, 42, 43, 45, 5, 54, 38, 29, 28, 41, 37, 38, 25, 57, 18,},
 		cmd = 5281,
 	}
 	self:gameStart(testSim_)
@@ -328,7 +328,7 @@ end
 function RoomCtrl:vggTest2()
 	print("todo, test function")
 	local testSim_ = {
-		cards = {3, 4, 25,},
+		cards = {0x4e, 0x4f, 25,},
 		cmd = 5283,
 		odds = 3,
 		uid = 1,

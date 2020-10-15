@@ -139,7 +139,7 @@ function SeatManager:doDealCardsAnim(cards)
         end
     end
     cardAnim(cc.p(layer:getContentSize().width/2, layer:getContentSize().height/2), 0.04, true, function()
-        table.sort(cards, function(a, b) return not RoomUtil.sortCard(a, b) end)
+        table.sort(cards, function(a, b) return not RoomUtil.sortCard(a, b, true) end)
         cardAnim2(function()
             cardAnim(cc.p(layer:getContentSize().width/2, 0), 0, false)
         end)
@@ -171,7 +171,7 @@ end
 
 function SeatManager:insertCardsAnim(cards)
     if not self.cardList_ then return end
-    table.sort(cards, function(a, b) return not RoomUtil.sortCard(a, b) end)
+    table.sort(cards, function(a, b) return not RoomUtil.sortCard(a, b, true) end)
     local cardList = {}
     local newCards = {}
     for i = 1, #cards do
@@ -182,17 +182,15 @@ function SeatManager:insertCardsAnim(cards)
     local idx = 1
     for i = 1, #self.cardList_ do
         if idx <= #cards then
-            if (RoomUtil.compareCard(cards[idx], self.cardList_[i]:getCard()) <= 0) then
+            while (idx <= #cards and RoomUtil.compareCard(cards[idx], self.cardList_[i]:getCard()) <= 0) do
                 table.insert(cardList, newCards[idx])
                 idx = idx + 1
             end
         end
         table.insert(cardList, self.cardList_[i])
-        if i == #self.cardList_ and idx <= #cards then
-            for j = idx, #cards do
-                table.insert(cardList, newCards[j])
-            end
-        end
+    end
+    for j = idx, #cards do -- 添加余下的牌(如果有的话)
+        table.insert(cardList, newCards[j])
     end
     local midX = self.mCardLayer:getContentSize().width/2
     dump(cardList, "cardList")
@@ -278,8 +276,14 @@ function SeatManager:onTouchEnd(node, cardlist)
         node:hideDark()
     end
     print(self.selBeginIdx, self.selEndIdx)
+    self.selCards_ = {}
     for i = self.selBeginIdx, self.selEndIdx do
         self:onMCardClick(self.cardList_[i])
+    end
+    for _, node in pairs(self.cardList_) do
+        if node:getPositionY() == CARD_ARISE_Y then
+            table.insert(self.selCards_, node:getCard())
+        end
     end
 end
 
@@ -314,7 +318,6 @@ function SeatManager:doCastGrab(uid, isGrab, odds)
 end
 
 function SeatManager:doUserGrab(uid, isGrab, odds)
-    printVgg("doUserGrab", uid, isGrab, odds)
     self:stopCountDown(uid)
     local wordRes = nil
     if isGrab == 1 and odds <= 1 then
@@ -330,7 +333,6 @@ function SeatManager:doUserGrab(uid, isGrab, odds)
         wordRes = mResDir .. "player_pass_2.png"
         print("todo, no call 2...")
     end
-    printVgg("wordRes", wordRes)
     self:showWordText(uid, wordRes)
 end
 
