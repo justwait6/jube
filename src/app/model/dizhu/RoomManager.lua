@@ -78,6 +78,42 @@ function RoomManager:initOperBtn()
         :setSwallowTouches(false)
     self.grabBtn:setButtonLabel(display.newSprite(mResDir .. "buttons/orange_call_landlord.png"))
     table.insert(self.operBtns, self.grabBtn)
+
+    self.noOutBtn = g.myUi.ScaleButton.new({normal = mResDir .. "buttons/bt_green_bg.png"})
+	:onClick(handler(self.roomCtrl_, self.roomCtrl_.onNoOutClick))
+		:addTo(self.sceneRoomNode_)
+		:pos(P[4].x, P[4].y)
+		:hide()
+        :setSwallowTouches(false)
+    self.noOutBtn:setButtonLabel(display.newSprite(mResDir .. "buttons/green_pass_card.png"))
+    table.insert(self.operBtns, self.noOutBtn)
+
+    self.promptBtn = g.myUi.ScaleButton.new({normal = mResDir .. "buttons/bt_green_bg.png"})
+	:onClick(handler(self.roomCtrl_, self.roomCtrl_.onPromptClick))
+		:addTo(self.sceneRoomNode_)
+		:pos(P[5].x, P[5].y)
+		:hide()
+        :setSwallowTouches(false)
+    self.promptBtn:setButtonLabel(display.newSprite(mResDir .. "buttons/green_prompt_card.png"))
+    table.insert(self.operBtns, self.promptBtn)
+
+    self.outCardBtn = g.myUi.ScaleButton.new({normal = mResDir .. "buttons/bt_orange_bg.png"})
+	:onClick(handler(self.roomCtrl_, self.roomCtrl_.onOutCardClick))
+		:addTo(self.sceneRoomNode_)
+		:pos(P[5].x, P[5].y)
+		:hide()
+        :setSwallowTouches(false)
+    self.outCardBtn:setButtonLabel(display.newSprite(mResDir .. "buttons/orange_out_card.png"))
+    table.insert(self.operBtns, self.outCardBtn)
+
+    self.cannotOutBtn = g.myUi.ScaleButton.new({normal = mResDir .. "buttons/bt_orange_bg.png"})
+	:onClick(handler(self.roomCtrl_, self.roomCtrl_.onNoOutClick))
+		:addTo(self.sceneRoomNode_)
+		:pos(P[5].x, P[5].y)
+		:hide()
+        :setSwallowTouches(false)
+    self.cannotOutBtn:setButtonLabel(display.newSprite(mResDir .. "buttons/pass_only.png"))
+    table.insert(self.operBtns, self.cannotOutBtn)
 end
 
 local dizhuBarNum = {}
@@ -169,6 +205,26 @@ end
 function RoomManager:hideGrabBtns()
     self.noGrabBtn:hide()
     self.grabBtn:hide()
+end
+
+function RoomManager:doWhenSelfTurn(isNewRound)
+    print(1)
+    if (isNewRound == 1) then
+        print(2)
+        self.outCardBtn:pos(P[5].x, P[5].y):show()
+        self.noOutBtn:hide()
+        self.promptBtn:hide()
+        self.cannotOutBtn:hide()
+    elseif (not RoomUtil.canOut(roomInfo:getMCards(), roomInfo:getLatestOutCards())) then -- 要不起
+        print(3)
+        self.cannotOutBtn:show()
+    else
+        print(4)
+        self.outCardBtn:pos(P[6].x, P[6].y):show()
+        self.noOutBtn:show()
+        self.promptBtn:show()
+        self.cannotOutBtn:hide()
+    end
 end
 
 function RoomManager:clearAll()

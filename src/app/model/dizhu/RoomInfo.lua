@@ -26,6 +26,12 @@ end
 function RoomInfo:getMCards()
     return self.mCards
 end
+function RoomInfo:setLatestOutCards(cards)
+    self.lastestOutCards_ = cards
+end
+function RoomInfo:getLatestOutCards()
+    return self.lastestOutCards_
+end
 
 function RoomInfo:clearMCards()
    self.mCards = {}

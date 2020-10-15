@@ -116,6 +116,14 @@ DizhuCmdConfig = {
             {name="time",type=T.INT},
         }
     },
+    [C.SVR_DIZHU_TURN] = {
+        ver = 1,
+        fmt = {
+            {name="uid",type=T.INT},
+            {name="isNewRound",type=T.BYTE},
+            {name="time",type=T.INT},
+        }
+    },
     [C.SVR_DIZHU_GRAB_RESULT] = {
         ver = 1,
         fmt = {

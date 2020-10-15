@@ -285,4 +285,8 @@ function RoomUtil.isJokerBoom(cards)
     return cards[1] == CardDef.SMALL_JOKER and cards[2] == CardDef.BIG_JOKER
 end
 
+function RoomUtil.canOut(mCards, cmpCards)
+    return true
+end
+
 return RoomUtil

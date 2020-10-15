@@ -117,6 +117,8 @@ function RoomCtrl:processPacket_(pack)
 		self:castGrab(pack)
 	elseif cmd == CmdDef.SVR_DIZHU_GRAB_RESULT then
 		self:castGrabResult(pack)
+	elseif cmd == CmdDef.SVR_DIZHU_TURN then
+		self:userTurn(pack)
 	end
 end
 
@@ -224,7 +226,7 @@ function RoomCtrl:grabTurn(pack)
 		seatMgr:hideWordText(g.user:getUid())
 		roomMgr:doWhenGrabTurn(pack.odds)
 	else
-		roomMgr:hideGrabBtns(pack.odds)
+		roomMgr:hideGrabBtns()
 	end
 end
 
@@ -232,7 +234,7 @@ function RoomCtrl:grab(pack)
 	if not pack then return end
 	if pack.ret == 0 then
 		seatMgr:doGrab(pack.isGrab, pack.odds)
-		roomMgr:hideGrabBtns(pack.odds)
+		roomMgr:hideGrabBtns()
 	end
 end
 
@@ -247,6 +249,17 @@ function RoomCtrl:castGrabResult(pack)
 	seatMgr:doGrabResult(pack.uid)
 	if pack.uid == g.user:getUid() then
 		seatMgr:insertCardsAnim(pack.cards)
+	end
+end
+
+function RoomCtrl:userTurn(pack)
+	if not pack then return end
+	seatMgr:startCountDown(pack.time, pack.uid)
+	if pack.uid == g.user:getUid() then
+		seatMgr:hideWordText(g.user:getUid())
+		roomMgr:doWhenSelfTurn(pack.isNewRound)
+	else
+		roomMgr:hideTurnBtns()
 	end
 end
 
@@ -329,11 +342,12 @@ function RoomCtrl:vggTest2()
 	print("todo, test function")
 	local testSim_ = {
 		cards = {0x4e, 0x4f, 25,},
-		cmd = 5283,
-		odds = 3,
+		cmd = 5284,
+		isNewRound = 1,
+		time = 25,
 		uid = 1,
 	}
-	self:castGrabResult(testSim_)
+	self:userTurn(testSim_)
 end
 
 function RoomCtrl:dispose()

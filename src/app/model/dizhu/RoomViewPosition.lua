@@ -20,9 +20,9 @@ P.WordPosition = {
 }
 
 P.DizhuIconPosition = {
-    [0] = cc.p(P.SeatPosition[0].x + 80, P.SeatPosition[0].y),
+    [0] = cc.p(P.SeatPosition[0].x - 80, P.SeatPosition[0].y),
     [1] = cc.p(P.SeatPosition[1].x + 96, P.SeatPosition[1].y),
-    [2] = cc.p(P.SeatPosition[2].x - 80, P.SeatPosition[2].y),
+    [2] = cc.p(P.SeatPosition[2].x + 80, P.SeatPosition[2].y),
 }
 
 P.OperBtnPosition = {
