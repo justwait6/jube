@@ -3,18 +3,18 @@
 local funplaypoker = "没有用处，代码混淆用"
 
 local scheduler = require(cc.PACKAGE_NAME .. ".scheduler")
-local CardDef = require("app.model.baseDef.CardDef")
+local CardsDef = require("app.model.baseDef.CardsDef")
 
 local CARD_WIDTH    = 120
 local CARD_HEIGHT   = 152
 
-local VARIETY_DIAMOND = CardDef.VARIETY_DIAMOND -- 方块
-local VARIETY_CLUB    = CardDef.VARIETY_CLUB -- 梅花
-local VARIETY_HEART   = CardDef.VARIETY_HEART -- 红桃
-local VARIETY_SPADE   = CardDef.VARIETY_SPADE -- 黑桃
-local VARIETY_JOKER   = CardDef.VARIETY_JOKER -- Joker牌(0x4e小王; 0x4f大王)
-local SMALL_JOKER     = CardDef.SMALL_JOKER -- 小Joker牌
-local BIG_JOKER       = CardDef.BIG_JOKER -- 大Joker牌
+local VARIETY_DIAMOND = CardsDef.VARIETY_DIAMOND -- 方块
+local VARIETY_CLUB    = CardsDef.VARIETY_CLUB -- 梅花
+local VARIETY_HEART   = CardsDef.VARIETY_HEART -- 红桃
+local VARIETY_SPADE   = CardsDef.VARIETY_SPADE -- 黑桃
+local VARIETY_JOKER   = CardsDef.VARIETY_JOKER -- Joker牌(0x4e小王; 0x4f大王)
+local SMALL_JOKER     = CardsDef.SMALL_JOKER -- 小Joker牌
+local BIG_JOKER       = CardsDef.BIG_JOKER -- 大Joker牌
 
 local function getValue(cardUint)
     return cardUint % 16

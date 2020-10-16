@@ -78,6 +78,7 @@ C.SVR_RUMMY_USER_BACK                   = 0x041B -- Rummy通报"I am back"返回
 --[[ Dizhu Client Protocol Begin --]]
 C.CLI_DIZHU_READY                      = 0x040C -- Dizhu请求准备
 C.CLI_DIZHU_GRAB                       = 0x040E -- Dizhu请求Grab
+C.CLI_DIZHU_OUT_CARD                   = 0x0410 -- Dizhu请求出牌
 --[[ Dizhu Client Protocol End --]]
 
 --[[ Dizhu Server Protocol Begin --]]
@@ -89,6 +90,8 @@ C.SVR_DIZHU_READY                      = 0x040D -- Dizhu返回用户准备
 C.SVR_CAST_DIZHU_READY                 = 0x140D -- Dizhu广播用户准备
 C.SVR_DIZHU_GRAB                       = 0x040F -- Dizhu返回请求Grab
 C.SVR_CAST_DIZHU_GRAB                  = 0x140F -- Dizhu广播Grab
+C.SVR_DIZHU_OUT_CARD                   = 0x0411 -- Dizhu返回用户出牌
+C.SVR_CAST_DIZHU_OUT_CARD              = 0x1411 -- Dizhu广播用户出牌
 --[[ Dizhu Server Protocol End --]]
 
 return CommandDef

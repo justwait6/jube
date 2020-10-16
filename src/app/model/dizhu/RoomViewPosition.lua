@@ -25,6 +25,12 @@ P.DizhuIconPosition = {
     [2] = cc.p(P.SeatPosition[2].x + 80, P.SeatPosition[2].y),
 }
 
+P.OutCardPosition = {
+    [0] = cc.p(P.SeatPosition[0].x + 160, P.SeatPosition[0].y - 100),
+    [1] = cc.p(P.SeatPosition[1].x, display.cy + 20),
+    [2] = cc.p(P.SeatPosition[2].x - 160, P.SeatPosition[2].y - 100),
+}
+
 P.OperBtnPosition = {
     [0] = cc.p(display.cx - 120, display.cy - 120), -- seencards button, left
     [1] = cc.p(display.cx + 120, display.cy - 120), -- ready button, right

@@ -36,6 +36,19 @@ DizhuCmdConfig = {
             {name = "isGrab", type = T.BYTE},
         }
     },
+    [C.CLI_DIZHU_OUT_CARD] = {
+        ver = 1,
+        fmt = {
+            {name = "uid", type = T.INT},
+            {name = "isOut", type = T.BYTE},
+            {name = "cardType", type = T.BYTE, depends = function(ctx) return ctx.isOut == 1 end},
+            {name="cards",type=T.ARRAY,lengthType=T.BYTE, depends = function(ctx) return ctx.isOut == 1 end,
+                    fmt = {
+                            {name="card",type=T.BYTE},
+                    },
+            },
+        }
+    },
 
     --[[
         服务器包
@@ -150,6 +163,26 @@ DizhuCmdConfig = {
             {name = "uid", type = T.INT},
             {name = "isGrab", type = T.BYTE},
             {name = "odds", type = T.INT},
+        }
+    },
+    [C.SVR_DIZHU_OUT_CARD] = {
+        ver = 1,
+        fmt = {
+            {name = "ret", type = T.BYTE},
+            {name = "isOut", type = T.BYTE, depends = function(ctx) return ctx.ret == 0 end},
+        }
+    },
+    [C.SVR_CAST_DIZHU_OUT_CARD] = {
+        ver = 1,
+        fmt = {
+            {name = "uid", type = T.INT},
+            {name = "isOut", type = T.BYTE},
+            {name = "cardType", type = T.BYTE, depends = function(ctx) return ctx.isOut == 1 end},
+            {name="cards",type=T.ARRAY,lengthType=T.BYTE, depends = function(ctx) return ctx.isOut == 1 end,
+                    fmt = {
+                            {name="card",type=T.BYTE},
+                    },
+            },
         }
     },
 }

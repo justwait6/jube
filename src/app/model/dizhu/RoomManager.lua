@@ -208,9 +208,8 @@ function RoomManager:hideGrabBtns()
 end
 
 function RoomManager:doWhenSelfTurn(isNewRound)
-    print(1)
+    roomInfo:setSelfNewRound(isNewRound == 1)
     if (isNewRound == 1) then
-        print(2)
         self.outCardBtn:pos(P[5].x, P[5].y):show()
         self.noOutBtn:hide()
         self.promptBtn:hide()
@@ -225,6 +224,13 @@ function RoomManager:doWhenSelfTurn(isNewRound)
         self.promptBtn:show()
         self.cannotOutBtn:hide()
     end
+end
+
+function RoomManager:hideTurnBtns()
+    self.noOutBtn:hide()
+    self.promptBtn:hide()
+    self.outCardBtn:hide()
+    self.cannotOutBtn:hide()
 end
 
 function RoomManager:clearAll()

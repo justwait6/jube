@@ -119,6 +119,10 @@ function RoomCtrl:processPacket_(pack)
 		self:castGrabResult(pack)
 	elseif cmd == CmdDef.SVR_DIZHU_TURN then
 		self:userTurn(pack)
+	elseif cmd == CmdDef.SVR_DIZHU_OUT_CARD then
+		self:outCard(pack)
+	elseif cmd == CmdDef.SVR_CAST_DIZHU_OUT_CARD then
+		self:castOutCard(pack)
 	end
 end
 
@@ -216,6 +220,7 @@ end
 function RoomCtrl:gameStart(pack)
 	if not pack then return end
 	seatMgr:clearTable()
+	roomInfo:setMCards(pack.cards)
 	seatMgr:doDealCardsAnim(pack.cards)
 end
 
@@ -248,6 +253,8 @@ function RoomCtrl:castGrabResult(pack)
 	roomMgr:updateDizhuArea(pack.cards, pack.odds)
 	seatMgr:doGrabResult(pack.uid)
 	if pack.uid == g.user:getUid() then
+		local cards = RoomUtil.addCards(roomInfo:getMCards(), pack.cards)
+		roomInfo:setMCards(cards);
 		seatMgr:insertCardsAnim(pack.cards)
 	end
 end
@@ -256,10 +263,37 @@ function RoomCtrl:userTurn(pack)
 	if not pack then return end
 	seatMgr:startCountDown(pack.time, pack.uid)
 	if pack.uid == g.user:getUid() then
-		seatMgr:hideWordText(g.user:getUid())
+		seatMgr:doWhenSelfTurn()
 		roomMgr:doWhenSelfTurn(pack.isNewRound)
 	else
 		roomMgr:hideTurnBtns()
+	end
+end
+
+function RoomCtrl:outCard(pack)
+	if not pack then return end
+	if pack.ret == 0 then
+		seatMgr:stopCountDown(g.user:getUid())
+		if pack.isOut == 1 then
+			local cards = RoomUtil.minusCards(roomInfo:getMCards(), roomInfo:getSelCards())
+			roomInfo:setMCards(cards)
+			seatMgr:clearOutCardArea(g.user:getUid())
+			seatMgr:selfOutCardsAnim()
+		else
+			seatMgr:doUserNoOut(g.user:getUid())
+		end
+	end
+end
+
+function RoomCtrl:castOutCard(pack)
+	if not pack then return end
+	seatMgr:stopCountDown(pack.uid)
+	if pack.isOut == 1 then
+		roomInfo:setLatestOutCards(pack.cards)
+		seatMgr:clearOutCardArea(pack.uid)
+		seatMgr:otherOutCardsAnim(pack.uid, pack.cardType, pack.cards)
+	else
+		seatMgr:doUserNoOut(pack.uid)
 	end
 end
 
@@ -309,11 +343,54 @@ function RoomCtrl:onNoGrabClick()
 	self:cliSendGrab(0)
 end
 
+function RoomCtrl:onNoOutClick()
+	self:cliSendOutCards(0)
+end
+
+function RoomCtrl:onOutCardClick()
+	local selCards = roomInfo:getSelCards()
+	local cardType = RoomUtil.getCardType(selCards)
+	local isOk = false
+	if roomInfo:isSelfNewRound() then
+		isOk = true
+	else
+		local ret = RoomUtil.vsCards(selCards, roomInfo:getLatestOutCards())
+		printVgg("onOutCardClick vs ret: ", ret)
+		if ret == 1 then
+			isOk = true
+		end
+	end
+	if isOk then
+		printVgg("onOutCardClick", cardType)
+		dump(selCards, "onOutCardClick selCards")
+		self:cliSendOutCards(1, cardType, selCards)
+	end
+end
+
 function RoomCtrl:cliSendGrab(isGrab)
 	if g.mySocket:isConnected() then
 		g.mySocket:send(g.mySocket:createPacketBuilder(CmdDef.CLI_DIZHU_GRAB)
 	   :setParameter("uid", g.user:getUid())
 	   :setParameter("isGrab", isGrab):build())
+	end
+end
+
+function RoomCtrl:cliSendOutCards(isOutNum, cardType, cards)
+	if g.mySocket:isConnected() then
+		local pack = g.mySocket:createPacketBuilder(CmdDef.CLI_DIZHU_OUT_CARD)
+			:setParameter("uid", g.user:getUid())
+			:setParameter("isOut", isOutNum)
+		if isOutNum == 1 then
+			pack:setParameter("cardType", cardType)
+			local rfCards = {}
+			for _, sCard in pairs(cards) do
+				table.insert(rfCards, {card = sCard})
+			end
+			pack:setParameter("cards", rfCards)
+			print("cliSendOutCards... cardType", cardType)
+			dump(rfCards, "rfCards")
+		end
+		g.mySocket:send(pack:build())
 	end
 end
 
@@ -329,10 +406,10 @@ function RoomCtrl:XXXX()
 	
 end
 
-function RoomCtrl:vggTest()
+function RoomCtrl:vggTest()		
 	print("todo, test function")
 	local testSim_ = {
-		cards = {7, 23, 21, 42, 43, 45, 5, 54, 38, 29, 28, 41, 37, 38, 25, 57, 18,},
+		cards = {36, 21, 22, 54, 6, 23, 39, 57, 10, 28, 45, 29, 61, 62, 14, 2, 34},
 		cmd = 5281,
 	}
 	self:gameStart(testSim_)
@@ -340,14 +417,14 @@ end
 
 function RoomCtrl:vggTest2()
 	print("todo, test function")
+
 	local testSim_ = {
-		cards = {0x4e, 0x4f, 25,},
-		cmd = 5284,
-		isNewRound = 1,
-		time = 25,
+		cards = {22, 28, 52,},
+		cmd = 5283,
+		odds = 3,
 		uid = 1,
 	}
-	self:userTurn(testSim_)
+	self:castGrabResult(testSim_)
 end
 
 function RoomCtrl:dispose()

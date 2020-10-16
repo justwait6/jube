@@ -32,6 +32,18 @@ end
 function RoomInfo:getLatestOutCards()
     return self.lastestOutCards_
 end
+function RoomInfo:setSelCards(cards)
+    self.mSelCards_ = cards
+end
+function RoomInfo:getSelCards()
+    return self.mSelCards_
+end
+function RoomInfo:setSelfNewRound(isNewRound)
+    self.isNewRound_ = isNewRound
+end
+function RoomInfo:isSelfNewRound()
+    return self.isNewRound_
+end
 
 function RoomInfo:clearMCards()
    self.mCards = {}
