@@ -15,11 +15,6 @@ local P3 = RVP.WordPosition
 local P4 = RVP.DizhuIconPosition
 local P5 = RVP.OutCardPosition
 
-local CARD_GAP = 40
-local S_CARD_GAP = 26
-local CARD_WIDTH = 114
-local CARD_ARISE_Y = 40
-
 function SeatManager:ctor()
     self.playerInfo = {}
     self.seats_ = {}
@@ -46,6 +41,13 @@ end
 
 function SeatManager:initAnimNode(sceneAnimNode)
     self.sceneAnimNode_ = sceneAnimNode
+
+    local layer = ccui.Layout:create()
+    self.mCardLayer = layer
+    layer:setContentSize(cc.size(300, 300))
+    layer:setPosition(cc.p(display.cx, display.cy + 20))
+    layer:setAnchorPoint(cc.p(0.5, 0.5))
+    self.sceneAnimNode_:addChild(layer)
 end
 
 function SeatManager.getInstance()
@@ -101,15 +103,12 @@ function SeatManager:initPlayerViewWithSeatId(user)
     end
 end
 
-function SeatManager:doDealCardsAnim(cards)
-    g.myFunc:safeRemoveNode(self.mCardLayer)
-    local layer = ccui.Layout:create()
-    self.mCardLayer = layer
-    layer:setContentSize(cc.size(300, 300))
-    layer:setPosition(cc.p(display.cx, display.cy + 30))
-    layer:setAnchorPoint(cc.p(0.5, 0.5))
-    self.sceneAnimNode_:addChild(layer)
+function SeatManager:getMCardsY()
+    return self.mCardLayer:getPositionY() - self.mCardLayer:getContentSize().width / 2
+end
 
+function SeatManager:doDealCardsAnim(cards)
+    local layer = self.mCardLayer
     local HAND_CARD_COUNT = #cards
     for i = 1, HAND_CARD_COUNT do
         self.cardList_[i] = g.myUi.PokerCard.new():setCard(cards[HAND_CARD_COUNT + 1 - i]):addTo(layer)
@@ -133,7 +132,7 @@ function SeatManager:doDealCardsAnim(cards)
             local card = self.cardList_[i]
             if showInitBack then card:showBack() end
             card:setPosition(initPos.x, initPos.y)
-            local destX = layer:getContentSize().width/2 + (i - 1) * CARD_GAP - (HAND_CARD_COUNT - 1) * CARD_GAP / 2
+            local destX = layer:getContentSize().width/2 + (i - 1) * RoomConst.CARD_GAP - (HAND_CARD_COUNT - 1) * RoomConst.CARD_GAP / 2
             sCardAnim(card, i * gapTime, cc.p(destX, 0), (i == HAND_CARD_COUNT) and finishCb)
         end
     end
@@ -155,7 +154,7 @@ function SeatManager:doGrabResult(uid)
     self:hideAllWordText()
 end
 
-function SeatManager:doShowDizhuIcon(uid)
+function SeatManager:doShowDizhuIcon(uid, noAnim)
     g.myFunc:safeRemoveNode(self.dizhuIcon_)
     self.dizhuIcon_ = display.newSprite(mResDir .. "lord_icon.png"):opacity(0)
         :pos(display.cx, display.cy)
@@ -163,13 +162,17 @@ function SeatManager:doShowDizhuIcon(uid)
     local seatId = self:querySeatIdByUid(uid)
     local fixSeatId = RoomUtil.getFixSeatId(seatId)
     if seatId >= 0 then
-        self.dizhuIcon_:stopAllActions()
-        self.dizhuIcon_:runAction(cc.Sequence:create({
-            cc.Spawn:create({
-                cc.FadeIn:create(0.5),
-                cc.MoveTo:create(0.5, P4[fixSeatId])
-            })
-        }))
+        if noAnim then
+            self.dizhuIcon_:opacity(255):pos(P4[fixSeatId].x, P4[fixSeatId].y)
+        else
+            self.dizhuIcon_:stopAllActions()
+            self.dizhuIcon_:runAction(cc.Sequence:create({
+                cc.Spawn:create({
+                    cc.FadeIn:create(0.5),
+                    cc.MoveTo:create(0.5, P4[fixSeatId])
+                })
+            }))
+        end
     end
 end
 
@@ -183,7 +186,7 @@ function SeatManager:insertCardsAnim(cards)
     local cardList = {}
     local newCards = {}
     for i = 1, #cards do
-        newCards[i] = g.myUi.PokerCard.new():setCard(cards[i]):pos(0, CARD_ARISE_Y):addTo(self.mCardLayer)
+        newCards[i] = g.myUi.PokerCard.new():setCard(cards[i]):pos(0, RoomConst.CARD_ARISE_Y):addTo(self.mCardLayer)
         self:mCardEvent(newCards[i])
         newCards[i]:showFront()
     end
@@ -192,19 +195,27 @@ function SeatManager:insertCardsAnim(cards)
     local idx1 = #cards
     local idx2 = 1
     for i = 1, cardCnt do
-        if idx1 >= 1 and not RoomUtil.sortCard(cards[idx1], self.cardList_[idx2]:getCard()) then
+        if idx1 >= 1 and idx2 <= #self.cardList_ then
+            if not RoomUtil.sortCard(cards[idx1], self.cardList_[idx2]:getCard()) then
+                table.insert(cardList, newCards[idx1])
+                idx1 = idx1 - 1
+            else
+                table.insert(cardList, self.cardList_[idx2])
+                idx2 = idx2 + 1
+            end
+        elseif idx1 >= 1 then
             table.insert(cardList, newCards[idx1])
             idx1 = idx1 - 1
-        else
+        elseif idx2 <= #self.cardList_ then
             table.insert(cardList, self.cardList_[idx2])
-            idx2 = idx2 + 1
+                idx2 = idx2 + 1
         end
     end
     local midX = self.mCardLayer:getContentSize().width/2
     dump(cardList, "cardList")
     
     for i = 1, cardCnt do
-        cardList[i]:setPositionX(midX + (i - 1) * CARD_GAP - (cardCnt - 1) * CARD_GAP / 2)
+        cardList[i]:setPositionX(midX + (i - 1) * RoomConst.CARD_GAP - (cardCnt - 1) * RoomConst.CARD_GAP / 2)
         cardList[i]:setLocalZOrder(i)
     end
     for i = 1, #newCards do
@@ -217,27 +228,29 @@ function SeatManager:insertCardsAnim(cards)
     self.cardList_ = cardList
 end
 
-function SeatManager:selfOutCardsAnim()
-    local selCards = roomInfo:getSelCards()
-    local cardType = RoomUtil.getCardType(selCards)
-    local formatedCards = RoomUtil.formatCards(cardType, selCards)
+function SeatManager:selfOutCardsAnim(cardType, cards, noAnim)
+    local formatedCards = RoomUtil.formatCards(cardType, cards)
     g.myFunc:safeRemoveNode(self.outCardNode)
     self.outCardNode = display.newNode():pos(P5[RoomConst.MSeatId].x, P5[RoomConst.MSeatId].y):addTo(self.sceneAnimNode_)
     for i = 1, #formatedCards do
-        local cardSprite = g.myUi.PokerCard.new():setCard(formatedCards[i]):addTo(self.outCardNode):scale(0.6):opacity(0)
-        cardSprite:pos((i - 1) * S_CARD_GAP - (#formatedCards - 1) * S_CARD_GAP/2, 4)
+        local cardSprite = g.myUi.PokerCard.new():setCard(formatedCards[i]):addTo(self.outCardNode):scale(0.67):opacity(0)
+        cardSprite:pos((i - 1) * RoomConst.S_CARD_GAP - (#formatedCards - 1) * RoomConst.S_CARD_GAP/2, 4)
         cardSprite:showFront()
-        cardSprite:stopAllActions()
-        cardSprite:runAction(cc.Sequence:create(cc.Spawn:create({
-            cc.FadeIn:create(0.2),
-            cc.MoveBy:create(0.2, cc.p(0, -4))
-        })))
+        if noAnim then
+            cardSprite:setPositionY(0)
+        else
+            cardSprite:stopAllActions()
+            cardSprite:runAction(cc.Sequence:create(cc.Spawn:create({
+                cc.FadeIn:create(0.2),
+                cc.MoveBy:create(0.2, cc.p(0, -4))
+            })))
+        end
     end
 
     self:updateMCards()
 end
 
-function SeatManager:otherOutCardsAnim(uid, cardType, cards)
+function SeatManager:otherOutCardsAnim(uid, cardType, cards, noAnim)
     local seatId = self:querySeatIdByUid(uid)
     if seatId < 0 then return end
     local fixSeatId = RoomUtil.getFixSeatId(seatId)
@@ -245,18 +258,28 @@ function SeatManager:otherOutCardsAnim(uid, cardType, cards)
     g.myFunc:safeRemoveNode(self.otherOutCardNodes[fixSeatId])
     self.otherOutCardNodes[fixSeatId] = display.newNode():pos(P5[fixSeatId].x, P5[fixSeatId].y):addTo(self.sceneAnimNode_)
     for i = 1, #formatedCards do
-        local cardSprite = g.myUi.PokerCard.new():setCard(formatedCards[i]):addTo(self.otherOutCardNodes[fixSeatId]):scale(0.6):opacity(0)
-        if fixSeatId == 0 then
-            cardSprite:pos((i - 1) * S_CARD_GAP - (#formatedCards - 1) * S_CARD_GAP/2, 2)
-        else
-            cardSprite:pos((i - 1) * S_CARD_GAP - (#formatedCards - 1) * S_CARD_GAP/2, 2)
-        end
+        local cardSprite = g.myUi.PokerCard.new():setCard(formatedCards[i]):addTo(self.otherOutCardNodes[fixSeatId]):scale(0.67):opacity(0)
+        cardSprite:pos((i - 1) * RoomConst.S_CARD_GAP - (#formatedCards - 1) * RoomConst.S_CARD_GAP/2, 2)
         cardSprite:showFront()
-        cardSprite:stopAllActions()
-        cardSprite:runAction(cc.Sequence:create(cc.Spawn:create({
-            cc.FadeIn:create(0.2),
-            cc.MoveBy:create(0.2, cc.p(0, -2))
-        })))
+        if noAnim then
+            cardSprite:setPositionY(0)
+        else
+            cardSprite:stopAllActions()
+            cardSprite:runAction(cc.Sequence:create(cc.Spawn:create({
+                cc.FadeIn:create(0.2),
+                cc.MoveBy:create(0.2, cc.p(0, -2))
+            })))
+        end
+    end
+end
+
+
+function SeatManager:showOutCards(uid, cards)
+    local cardType = RoomUtil.getCardType(cards)
+    if uid == g.user:getUid() then
+        self:selfOutCardsAnim(cardType, cards, true)
+    else
+        self:otherOutCardsAnim(uid, cardType, cards, true)
     end
 end
 
@@ -267,7 +290,7 @@ function SeatManager:updateMCards()
     local midX = self.mCardLayer:getContentSize().width/2
     for i = 1, #cards do
         self.cardList_[i] = g.myUi.PokerCard.new():setCard(cards[#cards + 1 - i]):addTo(self.mCardLayer)
-        self.cardList_[i]:setPositionX(midX + (i - 1) * CARD_GAP - (#cards - 1) * CARD_GAP / 2)
+        self.cardList_[i]:setPositionX(midX + (i - 1) * RoomConst.CARD_GAP - (#cards - 1) * RoomConst.CARD_GAP / 2)
         self.cardList_[i]:showFront()
         self:mCardEvent(self.cardList_[i])
     end
@@ -312,10 +335,10 @@ function SeatManager:onTouchMove(node, curX)
     local leftX = math.min(self.nodeStartX, curX)
     local rightX = math.max(self.nodeStartX, curX)
     for i, node in pairs(self.cardList_) do
-        local showLeft = node:getPositionX() - CARD_WIDTH / 2
-        local showRight = showLeft + CARD_GAP
+        local showLeft = node:getPositionX() - RoomConst.CARD_WIDTH / 2
+        local showRight = showLeft + RoomConst.CARD_GAP
         if (i == #self.cardList_) then
-            showRight = showLeft + CARD_WIDTH
+            showRight = showLeft + RoomConst.CARD_WIDTH
         end
         if (leftX < showLeft and showLeft < rightX) or (leftX < showRight and showRight < rightX) then
             self.selBeginIdx = math.min(self.selBeginIdx, i)
@@ -329,13 +352,13 @@ end
 
 function SeatManager:onMCardClick(node)
     if node:getPositionY() == 0 then
-        node:setPositionY(CARD_ARISE_Y)
+        node:setPositionY(RoomConst.CARD_ARISE_Y)
     else
         node:setPositionY(0)
     end
 end
 
-function SeatManager:onTouchEnd(node, cardlist)
+function SeatManager:onTouchEnd(node)
     for _, node in pairs(self.cardList_) do
         node:hideDark()
     end
@@ -345,11 +368,19 @@ function SeatManager:onTouchEnd(node, cardlist)
         self:onMCardClick(self.cardList_[i])
     end
     for i = #self.cardList_, 1 , -1 do -- Choosen Card Order must be ascending order
-        if self.cardList_[i]:getPositionY() == CARD_ARISE_Y then
+        if self.cardList_[i]:getPositionY() == RoomConst.CARD_ARISE_Y then
             table.insert(cards, self.cardList_[i]:getCard())
         end
     end
     roomInfo:setSelCards(cards)
+end
+
+function SeatManager:cancelAllCardsSel()
+    roomInfo:setSelCards({})
+    for _, node in pairs(self.cardList_) do
+        node:hideDark()
+        node:setPositionY(0)
+    end
 end
 
 function SeatManager:doReady(uid)
@@ -386,10 +417,10 @@ function SeatManager:doUserGrab(uid, isGrab, odds)
     self:stopCountDown(uid)
     local wordRes = nil
     if isGrab == 1 and odds <= 1 then
-        wordRes = mResDir .. "player_call_landlord.png"
+        wordRes = mResDir .. "player_grab_landlord.png"
         print("todo, jiao di zhu...")
     elseif isGrab == 1 and odds > 1 then
-        wordRes = mResDir .. "player_grab_landlord.png"
+        wordRes = mResDir .. "player_grab_call_landlord.png"
         print("todo, qiang di zhu...")
     elseif isGrab == 0 and odds < 1 then
         wordRes = mResDir .. "player_pass_1.png"
@@ -402,6 +433,7 @@ function SeatManager:doUserGrab(uid, isGrab, odds)
 end
 
 function SeatManager:doUserNoOut(uid)
+    self:clearOutCardArea(uid)
     self:showWordText(uid, mResDir .. "player_pass.png")
 end
 
@@ -427,8 +459,31 @@ function SeatManager:hideAllWordText()
     end
 end
 
+function SeatManager:outCardsInvalid()
+    self:cancelAllCardsSel()
+    self:showMCardsTip(mResDir .. "tips_outerror.png")
+end
+
+function SeatManager:selfCannotOut()
+    self:cancelAllCardsSel()
+    self:showMCardsTip(mResDir .. "tips_onlypass.png")
+end
+
+function SeatManager:showMCardsTip(tipRes)
+    g.myFunc:safeRemoveNode(self.mCardsTipNode)
+    self.mCardsTipNode = display.newNode():pos(display.cx, self:getMCardsY()):addTo(self.sceneAnimNode_)
+    local cardsW = RoomConst.CARD_WIDTH + (#self.cardList_ - 1) * RoomConst.CARD_GAP
+    display.newScale9Sprite(mResDir .. "pass_mask.png", 0, 2, cc.size(cardsW, RoomConst.CARD_HEIGHT + 2)):addTo(self.mCardsTipNode)
+    display.newSprite(tipRes):addTo(self.mCardsTipNode)
+end
+
+function SeatManager:hideMCardsTip()
+    g.myFunc:safeRemoveNode(self.mCardsTipNode)
+end
+
 function SeatManager:startCountDown(time,uid,finishCallback)
     local seatId = self:querySeatIdByUid(uid)
+    if time <= 0 then return end
     if seatId and seatId >=0 then
         local seat = self.seats_[seatId]
         seat:startCountDown(time,function()
@@ -626,13 +681,48 @@ function SeatManager:queryUsernameByUid(uid)
     return userinfo.nickName
 end
 
+function SeatManager:reconnectWhenGrab(users)
+    for _, user in pairs(users) do
+        local wordRes = nil
+        if user.grabState == RoomConst.PLAYER_GRAB_NO_GRAB then
+            wordRes = mResDir .. "player_pass_1.png"
+        elseif user.grabState == RoomConst.PLAYER_GRAB_NO_CALL then
+            wordRes = mResDir .. "player_pass_2.png"
+        elseif user.grabState == RoomConst.PLAYER_GRAB_GRAB then
+            wordRes = mResDir .. "player_grab_landlord.png"
+        elseif user.grabState == RoomConst.PLAYER_GRAB_CALL_GRAB then
+            wordRes = mResDir .. "player_grab_call_landlord.png"
+        end
+        if user.grabState == RoomConst.PLAYER_GRAB_NONE then
+            self:hideWordText(user.uid)
+        else
+            self:showWordText(user.uid, wordRes)
+        end
+    end
+end
+
+function SeatManager:reconnectWhenPlay(users)
+    for _, user in pairs(users) do
+        local wordRes = nil
+        if user.outCardState == RoomConst.PLAYER_GRAB_NONE then
+            self:hideWordText(user.uid)
+        elseif user.outCardState == RoomConst.OUT_CARD_STATE_NO_OUT then
+            self:showWordText(user.uid, mResDir .. "player_pass.png")
+        elseif user.outCardState == RoomConst.OUT_CARD_STATE_OUT then
+            self:showOutCards(user.uid, user.outCards)
+        end
+    end
+end
+
 function SeatManager:clearAll()
     self.playerInfo = {}
     self.seats_ = {}
 end
 
 function SeatManager:clearMCardsArea()
-    g.myFunc:safeRemoveNode(self.mCardLayer)
+    if self.mCardLayer then
+        self.mCardLayer:removeAllChildren()
+    end
 end
 
 function SeatManager:clearTable()

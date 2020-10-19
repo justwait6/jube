@@ -133,6 +133,20 @@ function RoomCtrl:enterRoom(pack)
 		seatMgr:initSeats(pack)
 		roomMgr:updateOperBtns(pack.state)
 		if pack.mPlayer.state == RoomConst.UserState_Ready then self:simulateReady() end
+		if pack.state == RoomConst.TState_InPlay then
+			roomInfo:setMCards(pack.cards)
+			seatMgr:updateMCards()
+			if pack.detailState == RoomConst.TDetailState_Grab then
+				seatMgr:reconnectWhenGrab(pack.users)
+				self:simulateGrabTurn(pack.operUid, pack.leftOperSec, pack.odds)
+			elseif pack.detailState == RoomConst.TDetailState_Play then
+				roomMgr:updateDizhuArea(pack.bottomCards, pack.odds)
+				if pack.isNewRound == 0 then roomInfo:setLatestOutCards(pack.latestOutCards) end
+				seatMgr:doShowDizhuIcon(pack.dUid, true)
+				seatMgr:reconnectWhenPlay(pack.users)
+				self:simulateUserTurn(pack.operUid, pack.leftOperSec, pack.isNewRound)
+			end
+		end
 	else 
 		local msg = "unknown error"
 		if pack.ret == 3 then
@@ -235,6 +249,10 @@ function RoomCtrl:grabTurn(pack)
 	end
 end
 
+function RoomCtrl:simulateGrabTurn(uid_, time_, odds_)
+	self:grabTurn({uid = uid_, time = time_, odds = odds_})
+end
+
 function RoomCtrl:grab(pack)
 	if not pack then return end
 	if pack.ret == 0 then
@@ -270,6 +288,10 @@ function RoomCtrl:userTurn(pack)
 	end
 end
 
+function RoomCtrl:simulateUserTurn(uid_, time_, isNewRound_)
+	self:userTurn({uid = uid_, time = time_, isNewRound = isNewRound_})
+end
+
 function RoomCtrl:outCard(pack)
 	if not pack then return end
 	if pack.ret == 0 then
@@ -278,7 +300,9 @@ function RoomCtrl:outCard(pack)
 			local cards = RoomUtil.minusCards(roomInfo:getMCards(), roomInfo:getSelCards())
 			roomInfo:setMCards(cards)
 			seatMgr:clearOutCardArea(g.user:getUid())
-			seatMgr:selfOutCardsAnim()
+			local selCards = roomInfo:getSelCards()
+    		local cardType = RoomUtil.getCardType(selCards)
+			seatMgr:selfOutCardsAnim(cardType, selCards)
 		else
 			seatMgr:doUserNoOut(g.user:getUid())
 		end
@@ -406,10 +430,11 @@ function RoomCtrl:XXXX()
 	
 end
 
-function RoomCtrl:vggTest()		
+function RoomCtrl:vggTest()
+
 	print("todo, test function")
 	local testSim_ = {
-		cards = {36, 21, 22, 54, 6, 23, 39, 57, 10, 28, 45, 29, 61, 62, 14, 2, 34},
+		cards = {20,52,21,6,54,56,9,26,42,59,28,44,62,2,34,78,79},
 		cmd = 5281,
 	}
 	self:gameStart(testSim_)
@@ -419,12 +444,15 @@ function RoomCtrl:vggTest2()
 	print("todo, test function")
 
 	local testSim_ = {
-		cards = {22, 28, 52,},
+		cards = {7, 8, 30,},
 		cmd = 5283,
 		odds = 3,
 		uid = 1,
 	}
 	self:castGrabResult(testSim_)
+
+
+	-- seatMgr:outCardsInvalid()
 end
 
 function RoomCtrl:dispose()

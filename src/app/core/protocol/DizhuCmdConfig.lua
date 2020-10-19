@@ -61,7 +61,6 @@ DizhuCmdConfig = {
             {name="level",type=T.INT, depends = function(ctx) return ctx.ret == 0 end},
             {name="state",type=T.INT, depends = function(ctx) return ctx.ret == 0 end},
             {name="smallbet",type=T.INT, depends = function(ctx) return ctx.ret == 0 end},
-            {name="dUid",type=T.INT, depends = function(ctx) return ctx.ret == 0 end},
             {name="players", type=T.ARRAY, lengthType=T.BYTE, depends = function(ctx) return ctx.ret == 0 end,
                 fmt = {
                     {name="uid", type=T.INT},
@@ -70,6 +69,40 @@ DizhuCmdConfig = {
                     {name="gold", type=T.LONG},
                     {name="userinfo", type=T.STRING},
                     {name="state",type=T.INT}
+                }
+            },
+            {name="dUid",type=T.INT, depends = function(ctx) return ctx.ret == 0 and (ctx.state == 1) end},
+            {name="cards", type=T.ARRAY, lengthType=T.BYTE, depends = function(ctx) return ctx.ret == 0 and (ctx.state == 1) end,
+                    fmt = {
+                            {name="card",type=T.BYTE},
+                    },
+            },
+            {name="detailState",type=T.BYTE, depends = function(ctx) return ctx.ret == 0 and (ctx.state == 1) end },
+            {name="operUid", type=T.INT, depends = function(ctx) return ctx.ret == 0 and (ctx.state == 1) end},
+            {name="leftOperSec", type=T.INT, depends = function(ctx) return ctx.ret == 0 and (ctx.state == 1) end},
+            {name="odds",type=T.INT, depends = function(ctx) return ctx.ret == 0 and (ctx.state == 1) end},
+            {name="isNewRound",type=T.BYTE, depends = function(ctx) return ctx.ret == 0 and (ctx.detailState == 1) end },
+            {name="bottomCards", type=T.ARRAY, lengthType=T.BYTE, depends = function(ctx) return ctx.ret == 0 and (ctx.detailState == 1) end,
+                fmt = {
+                        {name="card",type=T.BYTE},
+                },
+            },
+            {name="latestOutCards", type=T.ARRAY, lengthType=T.BYTE, depends = function(ctx) return ctx.ret == 0 and (ctx.detailState == 1) and (ctx.isNewRound == 0) end,
+                fmt = {
+                        {name="card",type=T.BYTE},
+                },
+            },
+            {name="users", type=T.ARRAY, lengthType=T.BYTE, depends = function(ctx) return ctx.ret == 0 and (ctx.state == 1) end, 
+                fmt = {
+                    {name="uid", type=T.INT},
+                    {name="grabState", type=T.BYTE},
+                    {name="outCardState", type=T.BYTE},
+                    {name="cardsNum", type=T.INT},
+                    {name="outCards", type=T.ARRAY, lengthType=T.BYTE,
+                        fmt = {
+                                {name="card",type=T.BYTE},
+                        },
+                    },
                 }
             },
         }

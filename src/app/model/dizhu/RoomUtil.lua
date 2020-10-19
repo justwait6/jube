@@ -381,14 +381,14 @@ end
 function RoomUtil.formatCards(cardType, cards)
     table.sort(cards, function(a, b) return RoomUtil.sortCard(a, b) end)
 
-    if RoomConst.CARD_T_THREE_ONE or cardType == RoomConst.CARD_T_THREE_TWO then
+    if cardType == RoomConst.CARD_T_THREE_ONE or cardType == RoomConst.CARD_T_THREE_TWO then
         if (not RoomUtil.isThree({cards[1], cards[2], cards[3]})) then
             for i = 1, #cards - 3 do
                 local card = table.remove(cards, 1)
                 table.insert(cards, card)
             end
         end
-    elseif RoomUtil.isFourTwo(cards) then
+    elseif cardType == RoomConst.CARD_T_FOUR_TWO then
         local startIdx = -1
         for i = 1, 3 do -- 注意不要越界
             if (RoomUtil.isFourBoom({cards[i], cards[i + 1], cards[i + 2], cards[i + 3]})) then
