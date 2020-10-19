@@ -349,7 +349,7 @@ function RoomCtrl:logoutRoom()
 end
 
 function RoomCtrl:onAddOddsClick()
-	print("todo, add odds")
+	print("todo, shown cards play")
 end
 
 function RoomCtrl:onBeginClick()
