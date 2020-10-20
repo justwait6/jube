@@ -103,6 +103,11 @@ end
 
 function RoomUtil.isThree(cards)
     if #cards ~= 3 then return false end
+    for i = 1, 3 do -- no joker card
+        if bit.brshift(cards[i], 4) == CardsDef.VARIETY_JOKER then
+            return false
+        end
+    end
     return isCardEqual(cards[1], cards[2]) and isCardEqual(cards[2], cards[3])
 end
 
@@ -215,9 +220,9 @@ function RoomUtil.isPlaneOne(cards)
         i = i + 1
     end
 
-    if #threeCardTags == cards / 4 then
+    if #threeCardTags == #cards / 4 then
         return canMapPlaneSeq(threeCardTags, 1, #threeCardTags)
-    elseif #threeCardTags > cards / 4 then
+    elseif #threeCardTags > #cards / 4 then
         return canMapPlaneSeq(threeCardTags, 1, #threeCardTags - 1) or canMapPlaneSeq(threeCardTags, 2, #threeCardTags)
     else
         return false
@@ -242,9 +247,9 @@ function RoomUtil.isPlaneTwo(cards)
             return false
         end
     end
-    if #threeCardTags == cards / 5 then
+    if #threeCardTags == #cards / 5 then
         return canMapPlaneSeq(threeCardTags, 1, #threeCardTags)
-    elseif #threeCardTags > cards / 5 then
+    elseif #threeCardTags > #cards / 5 then
         return canMapPlaneSeq(threeCardTags, 1, #threeCardTags - 1) or canMapPlaneSeq(threeCardTags, 2, #threeCardTags)
     else
         return false
@@ -273,8 +278,225 @@ function RoomUtil.isJokerBoom(cards)
     return cards[1] == CardsDef.SMALL_JOKER and cards[2] == CardsDef.BIG_JOKER
 end
 
-function RoomUtil.canOut(mCards, cmpCards)
-    return true
+-- 使用前提: 牌组已排序, 有炸弹返回最大炸弹, 没有返回false
+function RoomUtil.findLargestBoom(cards)
+    if #cards >= 2 and (RoomUtil.isJokerBoom({cards[#cards - 1], cards[#cards - 2]})) then
+        return {cards[#cards - 1], cards[#cards - 2]}
+    end
+    if #cards >= 4 then
+        for i = #cards, 4, -1 do
+            if (RoomUtil.isFourBoom({cards[i], cards[i - 1], cards[i - 2], cards[i - 3]})) then
+                return {cards[i], cards[i - 1], cards[i - 2], cards[i - 3]}
+            end
+        end
+    end
+    return false
+end
+
+-- 使用前提: 牌已排序, 比较牌组和自己牌组都不含炸弹牌或[四带二], 有更大的牌返回更大的牌, 没有返回false
+function RoomUtil.findLargerCards(cards, cmpCardType, cmpCardNum, cmpKeyCard)
+    if #cards < cmpCardNum then return false end
+    if cmpCardType == RoomConst.CARD_T_SINGLE then
+        for i = 1, #cards do
+            if RoomUtil.compareCard(cards[i], cmpKeyCard) == 1 then return {cards[i]} end
+        end
+    elseif cmpCardType == RoomConst.CARD_T_PAIR then
+        for i = 1, #cards - 1 do
+            if RoomUtil.compareCard(cards[i], cmpKeyCard) == 1 then
+                if RoomUtil.isPair({cards[i], cards[i + 1]}) then return {cards[i], cards[i + 1]} end
+            end
+        end
+    elseif cmpCardType == RoomConst.CARD_T_THREE then
+        for i = 1, #cards - 2 do
+            if RoomUtil.compareCard(cards[i], cmpKeyCard) == 1 then
+                if RoomUtil.isThree({cards[i], cards[i + 1], cards[i + 2]}) then return {cards[i], cards[i + 1], cards[i + 2]} end
+            end
+        end  
+    elseif cmpCardType == RoomConst.CARD_T_THREE_ONE then
+        local fCards = nil
+        for i = 1, #cards - 2 do
+            if RoomUtil.compareCard(cards[i], cmpKeyCard) == 1 then
+                if RoomUtil.isThree({cards[i], cards[i + 1], cards[i + 2]}) then fCards = {cards[i], cards[i + 1], cards[i + 2]} end
+            end
+        end
+        if fCards then
+            for i = 1, #cards do
+                if cards[i] % 16 ~= fCards[1] % 16 then
+                    table.insert(fCards, cards[i])
+                    break
+                end
+            end
+            return fCards
+        end
+    elseif cmpCardType == RoomConst.CARD_T_THREE_TWO then
+        local fCards = nil
+        for i = 1, #cards - 2 do
+            if RoomUtil.compareCard(cards[i], cmpKeyCard) == 1 then
+                if RoomUtil.isThree({cards[i], cards[i + 1], cards[i + 2]}) then fCards = {cards[i], cards[i + 1], cards[i + 2]} end
+            end
+        end
+        if fCards then
+            for i = 1, #cards do
+                if cards[i] % 16 ~= fCards[1] % 16 and cards[i] % 16 == cards[i + 1] % 16 then
+                    table.insert(fCards, cards[i])
+                    table.insert(fCards, cards[i + 1])
+                    break
+                end
+            end
+            return fCards
+        end
+    elseif cmpCardType == RoomConst.CARD_T_SEQ then
+        local sCards = {}
+        for i = 1, #cards do
+            if RoomUtil.compareCard(cards[i], cmpKeyCard) == 1 and not isHas2OrJoker({cards[i]}) then
+                if #sCards == 0 then
+                    table.insert(sCards, cards[i])
+                elseif sCards[#sCards] % 16 ~= cards[i] % 16 then
+                    table.insert(sCards, cards[i])
+                end
+            end
+        end
+        if #sCards < cmpCardNum then return false end
+        for i = 1, #sCards - (cmpCardNum - 1) do
+            local testCards = {}
+            for j = 0, cmpCardNum - 1 do
+                table.insert(testCards, sCards[i + j])
+            end
+            if RoomUtil.isSeq(testCards) then
+                return testCards
+            end
+        end
+    elseif cmpCardType == RoomConst.CARD_T_TWIN_SEQ then
+        local pairCards = {}
+        local i = 1
+        while (i <= #cards - 1) do
+            if RoomUtil.compareCard(cards[i], cmpKeyCard) == 1 and not isHas2OrJoker({cards[i]})
+                and cards[i] % 16 == cards[i + 1] % 16 then
+                if #pairCards == 0 or (#pairCards > 0 and pairCards[#pairCards] % 16 ~= cards[i] % 16) then
+                    table.insert(pairCards, cards[i])
+                    table.insert(pairCards, cards[i + 1])
+                    i = i + 1
+                end
+            end
+            i = i + 1
+        end
+        if #pairCards < cmpCardNum then return false end
+        for i = 1, #pairCards - (cmpCardNum - 2), 2 do
+            local testCards = {}
+            for j = 0, cmpCardNum / 2 - 1 do
+                table.insert(testCards, pairCards[i + j * 2])
+                table.insert(testCards, pairCards[i + j * 2 + 1])
+            end
+            if RoomUtil.isTwinSeq(testCards) then
+                return testCards
+            end
+        end
+    elseif cmpCardType == RoomConst.CARD_T_THREE_SEQ then
+        local threeCards = {}
+        local i = 1
+        while (i <= #cards - 2) do
+            if RoomUtil.compareCard(cards[i], cmpKeyCard) == 1 and not isHas2OrJoker({cards[i]})
+                and RoomUtil.isThree({cards[i], cards[i + 1], cards[i + 2]}) then
+                    table.insert(threeCards, cards[i])
+                    table.insert(threeCards, cards[i + 1])
+                    table.insert(threeCards, cards[i + 2])
+                    i = i + 2
+            end
+            i = i + 1
+        end
+        if #threeCards < cmpCardNum then return false end
+        for i = 1, #threeCards - (cmpCardNum - 3), 3 do
+            local testCards = {}
+            for j = 0, cmpCardNum / 3 - 1 do
+                table.insert(testCards, sCards[i + j * 3])
+                table.insert(testCards, sCards[i + j * 3 + 1])
+                table.insert(testCards, sCards[i + j * 3 + 2])
+            end
+            if RoomUtil.isThreeSeq(testCards) then
+                return testCards
+            end
+        end
+    elseif cmpCardType == RoomConst.CARD_T_PLANE_ONE then
+        local cmpThreeCards = {}
+        local nowCard = cmpKeyCard
+        local flyNum = cmpCardNum / 4 * 3
+        for i = 1, flyNum do
+            table.insert(cmpThreeCards, nowCard % 16)
+            table.insert(cmpThreeCards, nowCard % 16 + 16)
+            table.insert(cmpThreeCards, nowCard % 16 + 32)
+            nowCard = nowCard + 1
+        end 
+        local fCards = RoomUtil.findLargerCards(cards, RoomConst.CARD_T_THREE_SEQ, #cmpThreeCards, cmpKeyCard)
+        if fCards then
+            local flyCards = {}
+            local idx = 1
+            for i = 1, #cards do
+                if idx <= flyNum and (cards[i] % 16 < cmpKeyCard % 16 or cards[i] % 16 > (cmpKeyCard + flyNum - 1) % 16) then
+                    table.insert(flyCards, cards[i])
+                    idx = idx + 1
+                end
+            end
+            if #flyCards ~= flyNum then return false end
+            for _, card in pairs(flyCards) do
+                table.insert(fCards, card)
+            end
+            return fCards
+        end
+    elseif cmpCardType == RoomConst.CARD_T_PLANE_TWO then
+        local cmpThreeCards = {}
+        local nowCard = cmpKeyCard
+        local flyNum = cmpCardNum / 5 * 3
+        for i = 1, flyNum do
+            table.insert(cmpThreeCards, nowCard % 16)
+            table.insert(cmpThreeCards, nowCard % 16 + 16)
+            table.insert(cmpThreeCards, nowCard % 16 + 32)
+            nowCard = nowCard + 1
+        end
+        local fCards = RoomUtil.findLargerCards(cards, RoomConst.CARD_T_THREE_SEQ, #cmpThreeCards, cmpKeyCard)
+        if fCards then
+            local flyPairs = {}
+            local idx = 1
+            local i = 1
+            while (i <= #cards - 1) do
+                if idx <= flyNum and (cards[i] % 16 < cmpKeyCard % 16 or cards[i] % 16 > (cmpKeyCard + flyNum - 1) % 16)
+                    and (cards[i] % 16 == cards[i + 1] % 16) then
+                    table.insert(flyPairs, cards[i])
+                    idx = idx + 1
+                    i = i + 1
+                end
+                i = i + 1
+            end
+            if #flyCards ~= flyNum * 2 then return false end
+            for _, card in pairs(flyCards) do
+                table.insert(fCards, card)
+            end
+            return fCards
+        end
+    end
+    return false
+end
+
+function RoomUtil.promptOutCards(mCards, cmpCards)
+    table.sort(mCards, function(a, b) return RoomUtil.sortCard(a, b) end)
+    table.sort(cmpCards, function(a, b) return RoomUtil.sortCard(a, b) end)
+
+    local cmpType = RoomUtil.getCardType(cmpCards)
+    if cmpType == RoomConst.CARD_T_JOKER_BOOM then return false end -- 王炸快速判断
+
+    local assumeBoom1 = RoomUtil.findLargestBoom(mCards)
+    local assumeBoom2 = RoomUtil.findLargestBoom(mCards)
+    if assumeBoom1 then -- 自己有炸弹牌
+        if RoomUtil.vsCards(assumeBoom1, cmpCards) == 1 then return assumeBoom1 end
+    elseif cmpType == RoomConst.CARD_T_FOUR_BOOM or cmpType == RoomConst.CARD_T_FOUR_TWO then -- 自己没有炸弹牌, 比较牌组为炸弹牌或[四带二], 返回false
+        return false
+    end
+
+    -- 自己不含炸弹牌, 且比较牌组不是炸弹牌
+    local keyCard = RoomUtil.getKeyCard(cmpType, cmpCards)
+    print("keyCard, cmpType", keyCard, cmpType)
+    local fCards = RoomUtil.findLargerCards(mCards, cmpType, #cmpCards, keyCard)
+    dump(fCards, "fCards")
+    return fCards
 end
 
 --[[ 比较牌型以及牌大小
@@ -300,7 +522,7 @@ function RoomUtil.vsCards(cards1, cards2)
     local keyCard2 = RoomUtil.getKeyCard(type2, cards2)
     return RoomUtil.compareCard(keyCard1, keyCard2)
 end
--- 使用前提: 两组牌牌型相等, 且数量相同 
+-- 使用前提: 两组牌牌型相等(且牌型不为炸弹), 且数量相同 
 function RoomUtil.getKeyCard(cardType, cards)
     table.sort(cards, function(a, b) return RoomUtil.sortCard(a, b) end)
 

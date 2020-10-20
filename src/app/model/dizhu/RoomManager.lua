@@ -214,8 +214,8 @@ function RoomManager:doWhenSelfTurn(isNewRound)
         self.noOutBtn:hide()
         self.promptBtn:hide()
         self.cannotOutBtn:hide()
-    elseif (not RoomUtil.canOut(roomInfo:getMCards(), roomInfo:getLatestOutCards())) then -- 要不起
-        print(3)
+    elseif (not RoomUtil.promptOutCards(roomInfo:getMCards(), roomInfo:getLatestOutCards())) then -- 要不起
+        self.roomCtrl_:showCannotTips()
         self.cannotOutBtn:show()
     else
         print(4)

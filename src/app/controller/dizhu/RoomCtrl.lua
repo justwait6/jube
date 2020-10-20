@@ -295,6 +295,8 @@ end
 function RoomCtrl:outCard(pack)
 	if not pack then return end
 	if pack.ret == 0 then
+		roomMgr:hideTurnBtns()
+		seatMgr:hideMCardsTip()
 		seatMgr:stopCountDown(g.user:getUid())
 		if pack.isOut == 1 then
 			local cards = RoomUtil.minusCards(roomInfo:getMCards(), roomInfo:getSelCards())
@@ -375,6 +377,10 @@ function RoomCtrl:onOutCardClick()
 	local selCards = roomInfo:getSelCards()
 	local cardType = RoomUtil.getCardType(selCards)
 	local isOk = false
+	if cardType == RoomConst.CARD_T_NONE then
+		seatMgr:outCardsInvalid()
+		return
+	end
 	if roomInfo:isSelfNewRound() then
 		isOk = true
 	else
@@ -388,6 +394,13 @@ function RoomCtrl:onOutCardClick()
 		printVgg("onOutCardClick", cardType)
 		dump(selCards, "onOutCardClick selCards")
 		self:cliSendOutCards(1, cardType, selCards)
+	end
+end
+
+function RoomCtrl:onPromptClick()
+	local promptCards = RoomUtil.promptOutCards(roomInfo:getMCards(), roomInfo:getLatestOutCards())
+	if promptCards then
+		seatMgr:raisePromptCards(promptCards)
 	end
 end
 
@@ -418,6 +431,14 @@ function RoomCtrl:cliSendOutCards(isOutNum, cardType, cards)
 	end
 end
 
+function RoomCtrl:showCannotTips()
+	seatMgr:selfCannotOut()
+end
+
+function RoomCtrl:XXXX()
+	
+end
+
 function RoomCtrl:XXXX()
 	
 end
@@ -434,7 +455,7 @@ function RoomCtrl:vggTest()
 
 	print("todo, test function")
 	local testSim_ = {
-		cards = {20,52,21,6,54,56,9,26,42,59,28,44,62,2,34,78,79},
+		cards = {3, 35, 51, 52, 5, 37, 25, 57, 10, 26, 42, 59, 12, 44, 14, 46, 78,},
 		cmd = 5281,
 	}
 	self:gameStart(testSim_)
@@ -443,15 +464,17 @@ end
 function RoomCtrl:vggTest2()
 	print("todo, test function")
 
-	local testSim_ = {
-		cards = {7, 8, 30,},
-		cmd = 5283,
-		odds = 3,
-		uid = 1,
-	}
-	self:castGrabResult(testSim_)
-
-
+	-- local testSim_ = {
+	-- 	cards = {7, 8, 30,},
+	-- 	cmd = 5283,
+	-- 	odds = 3,
+	-- 	uid = 1,
+	-- }
+	-- self:castGrabResult(testSim_)
+	local promptCards = RoomUtil.promptOutCards(roomInfo:getMCards(), {4,23,39,55,})
+	if promptCards then
+		seatMgr:raisePromptCards(promptCards)
+	end
 	-- seatMgr:outCardsInvalid()
 end
 

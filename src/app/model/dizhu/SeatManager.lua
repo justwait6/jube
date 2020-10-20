@@ -383,6 +383,19 @@ function SeatManager:cancelAllCardsSel()
     end
 end
 
+function SeatManager:raisePromptCards(promptCards)
+    self:cancelAllCardsSel()
+    table.sort(promptCards, function(a, b) return RoomUtil.sortCard(a, b) end)
+    local curIdx = 1
+    for i = #self.cardList_, 1, -1 do
+        if curIdx <= #promptCards and self.cardList_[i]:getCard() == promptCards[curIdx] then
+            self.cardList_[i]:setPositionY(RoomConst.CARD_ARISE_Y)
+            curIdx = curIdx + 1
+        end
+    end
+    roomInfo:setSelCards(promptCards)
+end
+
 function SeatManager:doReady(uid)
     self:showReadyText(uid)
 end
@@ -434,6 +447,7 @@ end
 
 function SeatManager:doUserNoOut(uid)
     self:clearOutCardArea(uid)
+    self:cancelAllCardsSel()
     self:showWordText(uid, mResDir .. "player_pass.png")
 end
 
@@ -462,6 +476,11 @@ end
 function SeatManager:outCardsInvalid()
     self:cancelAllCardsSel()
     self:showMCardsTip(mResDir .. "tips_outerror.png")
+    g.mySched:cancel(self.schedId_)
+    self.schedId_ = g.mySched:doDelay(function()
+        g.mySched:cancel(self.schedId_)
+        self:hideMCardsTip()
+    end, 1)
 end
 
 function SeatManager:selfCannotOut()
@@ -478,7 +497,7 @@ function SeatManager:showMCardsTip(tipRes)
 end
 
 function SeatManager:hideMCardsTip()
-    g.myFunc:safeRemoveNode(self.mCardsTipNode)
+    if self.mCardsTipNode then self.mCardsTipNode:hide() end
 end
 
 function SeatManager:startCountDown(time,uid,finishCallback)
@@ -765,6 +784,7 @@ end
 
 function SeatManager:dispose()
     self:clearAll()
+    g.mySched:cancelAll()
 end
 
 return SeatManager
