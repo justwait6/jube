@@ -15,11 +15,6 @@ end
 function LoginView:initialize()
 	display.newSprite(g.Res.login_loginBg):addTo(self)
 
-	display.newTTFLabel({
-        	text = g.lang:getText("LOGIN", "LOGIN_TIPS"), size = 28, color = cc.c3b(0, 128, 128)})
-    	:pos(0, 160)
-    	:addTo(self)
-
     local yOffset = -236
     -- 用户输入框
 	self.nameEditBox = g.myUi.EditBox.new({
@@ -99,9 +94,9 @@ function LoginView:initialize()
 	:addTo(self)
 	-- test end
 
-	local leave = cc.ParticleSystemQuad:create("particles/Ye_1.plist")
-	self:addChild(leave)
-	leave:setPosition(-display.width/2, display.height/2)
+	-- local leave = cc.ParticleSystemQuad:create("particles/Ye_1.plist")
+	-- self:addChild(leave)
+	-- leave:setPosition(-display.width/2, display.height/2)
 end
 
 function LoginView:getInputUserName()

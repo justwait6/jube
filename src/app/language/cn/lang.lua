@@ -20,7 +20,6 @@ L.TEST.HELLO_WORLD 							 = "你好, 世界"
 
 L.LOGIN = {}
 L.LOGIN.LOGIN 								 = "登录"
-L.LOGIN.LOGIN_TIPS 							 = "现在是登录界面, 有本事进游戏来找我啊"
 L.LOGIN.SIGNUP_TIPS 						 = "注册界面, 兄嘚"
 L.LOGIN.NAME_TIPS 							 = "用户名"
 L.LOGIN.PWD_TIPS 							 = "密码"
@@ -31,7 +30,6 @@ L.LOGIN.SIGNUP_SUCC 						 = "注册成功, 2秒后自动跳入登录界面"
 L.LOGIN.GO_LOGIN 							 = "去登录"
 
 L.HALL = {}
-L.HALL.HALL_TIPS 							 = "你果然来了, 这是大厅, 我告诉你下一步怎么走"
 
 L.HTTP = {}
 L.HTTP.TIMEOUT 								 = "连接超时"
