@@ -29,11 +29,6 @@ Res.common_progress_img       = "image/common/progress_img.png"
 
 Res.commonroom_back           = "image/commonroom/back.png"
 
-
-Res.errorBg                   = "bg2.jpg"
-Res.loginBg                   = "katoBig.jpg"
-Res.hallBg                    = "katoBig2.jpg"
-Res.kato                      = "kato.jpg"
 Res.black                     = "image/common/black.png"
 Res.loadingIcon               = "image/common/loadingIcon.png"
 Res.loadingBg                 = "image/common/loadingBg.png"
